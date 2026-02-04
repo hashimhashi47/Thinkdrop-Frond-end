@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+    --color-dark-bg: #1E1E2E;
+    --color-dark-card: #2D2D44;
+    --color-dark-hover: #373754;
+    --color-brand-primary: #7C3AED;
+    --color-brand-hover: #6D28D9;
+}
+
+body {
+    background-color: var(--color-dark-bg);
+    color: #ffffff;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Custom Scrollbar for Dark Theme */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #4B4B6A;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #5E5E85;
+}
+
+/* Glass Utilities */
+.glass-panel {
+    background: rgba(45, 45, 68, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
