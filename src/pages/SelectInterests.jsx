@@ -25,11 +25,11 @@ export default function SelectInterests() {
         fetchInterests();
     }, []);
 
-    const toggleInterest = (interest) => {
-        if (selectedInterests.includes(interest)) {
-            setSelectedInterests(selectedInterests.filter(i => i !== interest));
+    const toggleInterest = (id) => {
+        if (selectedInterests.includes(id)) {
+            setSelectedInterests(selectedInterests.filter(i => i !== id));
         } else {
-            setSelectedInterests([...selectedInterests, interest]);
+            setSelectedInterests([...selectedInterests, id]);
         }
     };
 
@@ -37,7 +37,7 @@ export default function SelectInterests() {
         setLoading(true);
         try {
             await userService.updateUserInterests(selectedInterests);
-            navigate("/"); // Navigate to Home
+            navigate("/landing");
         } catch (error) {
             console.error("Failed to update interests", error);
         } finally {
@@ -68,17 +68,17 @@ export default function SelectInterests() {
                             <h3 className="text-xl font-bold text-white pl-2 border-l-4 border-brand-primary">{cat.category}</h3>
                             <div className="flex flex-wrap gap-3">
                                 {cat.items.map((item) => {
-                                    const isSelected = selectedInterests.includes(item);
+                                    const isSelected = selectedInterests.includes(item.id);
                                     return (
                                         <button
-                                            key={item}
-                                            onClick={() => toggleInterest(item)}
+                                            key={item.id}
+                                            onClick={() => toggleInterest(item.id)}
                                             className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 border ${isSelected
-                                                    ? "bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/25 scale-105"
-                                                    : "bg-[#2D2D44] text-gray-300 border-white/5 hover:bg-[#363654] hover:border-white/10"
+                                                ? "bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/25 scale-105"
+                                                : "bg-[#2D2D44] text-gray-300 border-white/5 hover:bg-[#363654] hover:border-white/10"
                                                 }`}
                                         >
-                                            {item}
+                                            {item.name}
                                             {isSelected && <Check size={14} strokeWidth={3} />}
                                         </button>
                                     );

@@ -7,8 +7,8 @@ export default function Signup() {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
-        fullName: "",
-        anonymousName: "",
+        fullname: "",
+        anonymousname: "",
         email: "",
         otp: "",
         password: ""
@@ -113,7 +113,7 @@ export default function Signup() {
                             <div>
                                 <label className="block text-sm text-gray-400 mb-2">Full name</label>
                                 <input
-                                    name="fullName"
+                                    name="fullname"
                                     required
                                     className="w-full bg-[#2D2D44] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all font-medium placeholder-gray-600"
                                     onChange={handleChange}
@@ -122,7 +122,7 @@ export default function Signup() {
                             <div>
                                 <label className="block text-sm text-gray-400 mb-2">Anonymous Name</label>
                                 <input
-                                    name="anonymousName"
+                                    name="anonymousname"
                                     className="w-full bg-[#2D2D44] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary transition-all font-medium placeholder-gray-600"
                                     onChange={handleChange}
                                 />

@@ -6,18 +6,17 @@ export default function RightFriends() {
     const [friends, setFriends] = useState([]);
 
     useEffect(() => {
-        userService.getFriends()
-            .then(setFriends)
-            .catch(() => {
-                // Fallback mock data if API fails
-                setFriends([
-                    { id: 1, name: "Alice Johnson", online: true },
-                    { id: 2, name: "Robert Fox", online: true },
-                    { id: 3, name: "Jenny Wilson", online: false },
-                ]);
-            });
-    }, []);
+        // Simulating an API call with Mock Data
+        const mockFriends = [
+            { id: 1, name: "Alice Johnson", username: "@alice_j", online: true, avatar: "https://i.pravatar.cc/150?u=1" },
+            { id: 2, name: "Robert Fox", username: "@robert_fox", online: true, avatar: "https://i.pravatar.cc/150?u=2" },
+            { id: 3, name: "Jenny Wilson", username: "@jenny_w", online: false, avatar: "https://i.pravatar.cc/150?u=3" },
+            { id: 4, name: "Cody Fisher", username: "@c_fisher", online: true, avatar: "https://i.pravatar.cc/150?u=4" },
+        ];
 
+        // Replace this with userService.getFriends() when the API is ready
+        setFriends(mockFriends);
+    }, []);
     return (
         <aside className="col-span-12 lg:col-span-3 hidden lg:block">
             <div className="bg-[#2D2D44] rounded-2xl shadow-sm border border-white/5 p-4 sticky top-24">

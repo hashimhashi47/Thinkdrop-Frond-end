@@ -5,6 +5,12 @@ import Feed from "../components/home/Feed";
 import RightFriends from "../components/home/RightFriends";
 
 export default function Home() {
+    const [feedKey, setFeedKey] = React.useState(0);
+
+    const refreshFeed = () => {
+        setFeedKey(prev => prev + 1);
+    };
+
     return (
         <div className="min-h-screen bg-[#1E1E2E] relative selection:bg-brand-primary selection:text-white">
             <div className="fixed inset-0 z-0 pointer-events-none">
@@ -14,8 +20,8 @@ export default function Home() {
             <Navbar />
 
             <main className="max-w-7xl mx-auto grid grid-cols-12 gap-6 px-4 sm:px-6 py-8 relative z-10">
-                <LeftProfile />
-                <Feed />
+                <LeftProfile onInterestUpdate={refreshFeed} />
+                <Feed key={feedKey} />
                 <RightFriends />
             </main>
         </div>

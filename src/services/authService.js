@@ -3,17 +3,17 @@ import apiClient from "../api/client";
 export const authService = {
     login: async (email, password) => {
         const response = await apiClient.post("/auth/login", { email, password });
-        if (response.data.token) {
-            localStorage.setItem("token", response.data.token);
-        }
+        // Token handling removed for cookie-based auth
+        // console.log(response.data)
         return response.data;
+
     },
 
+
     register: async (userData) => {
-        const response = await apiClient.post("/auth/register", userData);
-        if (response.data.token) {
-            localStorage.setItem("token", response.data.token);
-        }
+        // userData should match: { fullname, anonymousname, email, otp, password }
+        const response = await apiClient.post("/auth/signup", userData);
+        // Token handling removed for cookie-based auth
         return response.data;
     },
 
@@ -29,17 +29,33 @@ export const authService = {
         return response.data;
     },
 
-    updateInterests: async (interests) => {
-        // Mock API call
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({ success: true, message: "Interests updated" });
-            }, 800);
-        });
+    // services/userService.js
+    updateUserInterests: async (interestIds) => {
+        try {
+            // Based on your backend requirement: { sub_interest_ids: [1, 2, 3] }
+            const response = await apiClient.post("/user/addinterest", {
+                sub_interest_ids: interestIds
+            });
+
+            // Handle your backend's custom Error structure
+            if (response.data?.Error) {
+                throw new Error(response.data.Error.error);
+            }
+
+            return response.data; // Returns the "Sucess" object
+        } catch (error) {
+            console.error("Error updating interests:", error);
+            throw error;
+        }
     },
 
-    logout: () => {
-        localStorage.removeItem("token");
-        window.location.reload();
+    logout: async () => {
+        try {
+            await apiClient.post("/auth/logout");
+        } catch (error) {
+            console.error("Logout failed:", error);
+        } finally {
+            window.location.reload();
+        }
     },
 };
