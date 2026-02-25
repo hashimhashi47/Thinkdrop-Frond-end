@@ -16,42 +16,62 @@ import AddAccount from "./pages/AddAccount";
 import Withdraw from "./pages/Withdraw";
 import WithdrawalsHistory from "./pages/WithdrawalsHistory";
 
+// Protected Route Component
+import ProtectedRoute from "./components/routes/ProtectedRoute";
+import WalletProtectedRoute from "./components/routes/WalletProtectedRoute";
+
 // Admin Imports
 import AdminLayout from "./admin/layouts/AdminLayout";
 import AdminDashboard from "./admin/pages/AdminDashboard";
 import UserManagement from "./admin/pages/Users";
 import PostModeration from "./admin/pages/Posts";
 import Accounts from "./admin/pages/Accounts";
-import Reports from "./admin/pages/Reports";
+import AllPosts from "./admin/pages/AllPosts";
+import WalletManagement from "./admin/pages/Wallet";
+import AdminProfile from "./admin/pages/Profile";
+import Interests from "./admin/pages/Interests";
 
 function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/chat" element={<Chat />} />
+      {/* Public / Unprotected Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/landing" element={<Landing />} />
-      <Route path="/notifications" element={<Notifications />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/edit-profile" element={<EditProfile />} />
-      <Route path="/select-interests" element={<SelectInterests />} />
-      <Route path="/rewards" element={<Rewards />} />
-      <Route path="/wallet-intro" element={<WalletIntro />} />
-      <Route path="/rewards/add-account" element={<AddAccount />} />
-      <Route path="/rewards/withdraw" element={<Withdraw />} />
-      <Route path="/rewards/withdrawals-history" element={<WithdrawalsHistory />} />
 
-      <Route path="/user/:userId" element={<UserProfile />} />
+      {/* User Protected Routes */}
+      <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/select-interests" element={<SelectInterests />} />
+        <Route path="/user/:userId" element={<UserProfile />} />
+        <Route path="/wallet-intro" element={<WalletIntro />} />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="users" element={<UserManagement />} />
-        <Route path="posts" element={<PostModeration />} />
-        <Route path="accounts" element={<Accounts />} />
-        <Route path="reports" element={<Reports />} />
+        {/* Wallet Protected Routes */}
+        <Route element={<WalletProtectedRoute />}>
+          <Route path="/rewards" element={<Rewards />} />
+          <Route path="/rewards/add-account" element={<AddAccount />} />
+          <Route path="/rewards/withdraw" element={<Withdraw />} />
+          <Route path="/rewards/withdrawals-history" element={<WithdrawalsHistory />} />
+        </Route>
+      </Route>
+
+      {/* Admin Protected Routes */}
+      <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="posts" element={<PostModeration />} />
+          <Route path="accounts" element={<Accounts />} />
+          <Route path="wallet" element={<WalletManagement />} />
+          <Route path="all-posts" element={<AllPosts />} />
+          <Route path="profile" element={<AdminProfile />} />
+          <Route path="interests" element={<Interests />} />
+        </Route>
       </Route>
     </Routes>
   );

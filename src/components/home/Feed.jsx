@@ -44,7 +44,7 @@ export default function Feed() {
           ? new Date(post.created_at).toLocaleDateString()
           : "Just now",
         tags: post.interest?.name ? [post.interest.name] : [],
-        isLiked: post.isLiked || post.IsLiked || post.liked || false,
+        isLiked: post.isliked || post.isLiked || post.IsLiked || post.liked || false,
       }));
 
       setPosts(prev => isInitial ? mappedPosts : [...prev, ...mappedPosts]);

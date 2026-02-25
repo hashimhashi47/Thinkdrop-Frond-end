@@ -1,15 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, AlertTriangle, Settings, LogOut, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, AlertTriangle, Settings, LogOut, CreditCard, Wallet, User } from 'lucide-react';
+import { authService } from '../../services/authService';
+import { adminService } from '../../api/adminService';
 
 const AdminLayout = () => {
     const navItems = [
         { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
         { path: '/admin/users', label: 'Users', icon: Users },
         { path: '/admin/accounts', label: 'Accounts', icon: CreditCard },
-        { path: '/admin/posts', label: 'Surveillance', icon: FileText },
-        { path: '/admin/reports', label: 'Reports', icon: AlertTriangle },
+        { path: '/admin/wallet', label: 'Wallet', icon: Wallet },
+        { path: '/admin/interests', label: 'Interests', icon: Settings },
+        { path: '/admin/posts', label: 'Surveillance', icon: AlertTriangle },
+        { path: '/admin/all-posts', label: 'All Posts', icon: FileText },
+        { path: '/admin/profile', label: 'Profile', icon: User },
     ];
+
+    const [adminData, setAdminData] = useState({
+        fullname: 'Admin Ops',
+        role: 'Level 5 Clearance',
+        avatarurl: ''
+    });
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            try {
+                const data = await adminService.getAdminProfile();
+                if (data) {
+                    setAdminData(data);
+                }
+            } catch (error) {
+                console.error("Failed to load admin profile for layout:", error);
+            }
+        };
+        fetchAdminData();
+    }, []);
 
     return (
         <div className="flex h-screen bg-neutral-950 text-neutral-200 font-mono">
@@ -40,7 +65,10 @@ const AdminLayout = () => {
                 </nav>
 
                 <div className="p-4 border-t border-neutral-800">
-                    <button className="flex items-center gap-3 w-full px-4 py-3 rounded-md text-red-400 hover:bg-red-500/10 transition-colors">
+                    <button
+                        onClick={authService.logout}
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-md text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
                         <LogOut size={18} />
                         <span className="text-sm font-medium">System Logout</span>
                     </button>
@@ -56,10 +84,16 @@ const AdminLayout = () => {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right">
-                            <p className="text-sm text-neutral-300 font-bold">Admin Ops</p>
-                            <p className="text-xs text-neutral-500">Level 5 Clearance</p>
+                            <p className="text-sm text-neutral-300 font-bold capitalize">{adminData.fullname || 'Admin Ops'}</p>
+                            <p className="text-xs text-emerald-500 font-mono capitalize">{adminData.role || 'Level 5 Clearance'}</p>
                         </div>
-                        <div className="w-8 h-8 rounded bg-neutral-800 border border-neutral-700"></div>
+                        <div className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 overflow-hidden flex items-center justify-center">
+                            {adminData.avatarurl ? (
+                                <img src={adminData.avatarurl} alt="Admin" className="w-full h-full object-cover" />
+                            ) : (
+                                <User size={16} className="text-neutral-500" />
+                            )}
+                        </div>
                     </div>
                 </header>
 

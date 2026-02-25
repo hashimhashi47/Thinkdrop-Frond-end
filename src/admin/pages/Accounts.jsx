@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CreditCard, DollarSign, Award, ArrowUpRight, ArrowDownLeft, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { adminService } from '../../api/adminService';
 import { useSocket } from '../../hooks/useSocket';
 import { motion, useSpring, useTransform } from 'framer-motion';
+import { useCallback } from 'react';
 
 const AnimatedNumber = ({ value }) => {
     const spring = useSpring(value, { mass: 0.8, stiffness: 75, damping: 15 });
@@ -19,42 +20,45 @@ const Accounts = () => {
     const { on } = useSocket();
     const [accounts, setAccounts] = useState([]);
     const [stats, setStats] = useState({ totalBalance: 0, totalRedeemed: 0 });
-    const [loading, setLoading] = useState(false);
-    const [offset, setOffset] = useState(0);
-    const LIMIT = 10;
-    const [hasMore, setHasMore] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-
-    const observer = useRef();
-    const lastAccountElementRef = useCallback(node => {
-        if (loading) return;
-        if (observer.current) observer.current.disconnect();
-        observer.current = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting && hasMore) {
-                setOffset(prevOffset => prevOffset + 10);
-            }
-        });
-        if (node) observer.current.observe(node);
-    }, [loading, hasMore]);
+    const LIMIT = 10;
 
     useEffect(() => {
-        setOffset(0);
         fetchStats();
-        // Reset list on search change
-        fetchAccounts(true);
-    }, [searchTerm]);
+    }, []);
+
+    const fetchAccounts = useCallback(async () => {
+        setLoading(true);
+        try {
+            const offset = (page - 1) * LIMIT;
+            const { data, total } = await adminService.getAccounts(LIMIT, offset, searchTerm);
+            setAccounts(data || []);
+            setTotalPages(Math.ceil((total || 0) / LIMIT));
+        } catch (error) {
+            console.error("Failed to fetch accounts", error);
+            setAccounts([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [page, searchTerm]);
 
     useEffect(() => {
-        if (offset > 0) {
-            fetchAccounts(false);
-        }
-    }, [offset]);
+        // Debounce search
+        const timeoutId = setTimeout(() => {
+            fetchAccounts();
+        }, 500);
+
+        return () => clearTimeout(timeoutId);
+    }, [fetchAccounts]);
 
     const fetchStats = async () => {
         try {
             const statsData = await adminService.getAccountStats();
             setStats({
-                totalBalance: statsData?.totalpoints || 0, // Map totalpoints -> totalBalance
+                totalBalance: statsData?.totalpoints || 0,
                 totalRedeemed: statsData?.totalRedeemed || 0
             });
         } catch (error) {
@@ -64,68 +68,27 @@ const Accounts = () => {
 
     // WebSocket Listeners
     useEffect(() => {
-        const unsubscribeAccounts = on("UPDATE_ACCOUNTS", (payload) => {
-            console.log("Live update received:", payload);
-
-            // For infinite scroll, real-time updates to the list are tricky.
-            // If it's a new item, we might want to prepend it.
-            // If it's an update to existing, map over accounts.
-            // For now, let's just refresh the stats and maybe the first batch if offset is 0.
-
-            if (offset === 0) {
-                if (payload?.data && Array.isArray(payload.data)) {
-                    setAccounts(payload.data);
-                } else {
-                    fetchAccounts(true);
-                }
-            }
-
-            // 2. IMPORTANT: Refresh the header stats (total balance)
+        const unsubscribeAccounts = on("UPDATE_ACCOUNT", (payload) => {
+            console.log("WebSocket Received [UPDATE_ACCOUNT]:", payload);
             fetchStats();
+
+            const rawData = payload?.Sucess?.data || payload?.data || payload;
+
+            if (Array.isArray(rawData)) {
+                setAccounts(rawData);
+            } else {
+                fetchAccounts();
+            }
         });
 
         return () => {
             unsubscribeAccounts();
         };
-    }, [offset, on]);
-
-    const fetchAccounts = async (isNewSearch = false) => {
-        setLoading(true);
-        try {
-            const currentOffset = isNewSearch ? 0 : offset;
-            const { data, total } = await adminService.getAccounts(
-                LIMIT,
-                currentOffset,
-                searchTerm
-            );
-
-            setAccounts(prev => {
-                const newAccounts = data || [];
-                if (isNewSearch) return newAccounts;
-                const existingIds = new Set(prev.map(a => a.RazorpayPayoutID));
-                const uniqueNew = newAccounts.filter(a => !existingIds.has(a.RazorpayPayoutID));
-                return [...prev, ...uniqueNew];
-            });
-
-            // If total is provided, use it. Otherwise assume more if we got a full page.
-            if (total > 0) {
-                setHasMore((currentOffset + (data?.length || 0)) < total);
-            } else {
-                setHasMore((data?.length || 0) === LIMIT);
-            }
-
-        } catch (error) {
-            console.error("Failed to fetch accounts", error);
-            if (isNewSearch) setAccounts([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    }, [on, fetchAccounts]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-neutral-100 uppercase tracking-widest flex items-center gap-2">
                         <CreditCard className="text-emerald-500" />
@@ -139,8 +102,11 @@ const Accounts = () => {
                         type="text"
                         placeholder="Search Account..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="bg-neutral-900 border border-neutral-800 text-neutral-200 pl-10 pr-4 py-2 rounded-md focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 font-mono text-sm placeholder-neutral-600"
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setPage(1); // Reset to page 1 on search
+                        }}
+                        className="bg-neutral-900 border border-neutral-800 text-neutral-200 pl-10 pr-4 py-2 rounded-md focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 w-full md:w-64 font-mono text-sm placeholder-neutral-600"
                     />
                 </div>
             </div>
@@ -178,9 +144,9 @@ const Accounts = () => {
             </div>
 
             <div className="bg-neutral-900 border border-neutral-800 rounded-lg overflow-hidden">
-                <div className="overflow-x-auto max-h-[600px]" >
+                <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
-                        <thead className="sticky top-0 z-10">
+                        <thead>
                             <tr className="bg-neutral-950 border-b border-neutral-800 text-xs uppercase tracking-wider text-neutral-500 font-mono">
                                 <th className="p-4">User ID</th>
                                 <th className="p-4">Bank ID</th>
@@ -192,14 +158,21 @@ const Accounts = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral-800">
-                            {accounts.map((account, index) => {
-                                const isLastElement = accounts.length === index + 1;
-                                return (
-                                    <tr
-                                        key={account.RazorpayPayoutID || index}
-                                        className="hover:bg-neutral-800/30 transition-colors"
-                                        ref={isLastElement ? lastAccountElementRef : null}
-                                    >
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="7" className="p-8 text-center text-neutral-500 font-mono animate-pulse">
+                                        SEARCHING RECORDS...
+                                    </td>
+                                </tr>
+                            ) : accounts.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="p-8 text-center text-neutral-500 font-mono">
+                                        NO_RECORDS_FOUND
+                                    </td>
+                                </tr>
+                            ) : (
+                                accounts.map((account, index) => (
+                                    <tr key={account.RazorpayPayoutID || index} className="hover:bg-neutral-800/30 transition-colors group">
                                         <td className="p-4 text-neutral-500 font-mono text-xs">#{account.UserID}</td>
                                         <td className="p-4 text-neutral-400 font-mono text-xs">BID_{account.BankAccountID}</td>
                                         <td className="p-4 text-right font-mono text-emerald-400 font-medium">{account.PointsUsed?.toLocaleString()} PTS</td>
@@ -212,31 +185,36 @@ const Accounts = () => {
                                                 {account.Status}
                                             </span>
                                         </td>
-                                        <td className="p-4 text-neutral-500 text-xs font-mono truncate" title={account.RazorpayPayoutID}>
+                                        <td className="p-4 text-neutral-500 text-xs font-mono truncate max-w-[150px]" title={account.RazorpayPayoutID}>
                                             {account.RazorpayPayoutID}
                                         </td>
-                                        <td className="p-4 text-neutral-500 text-xs font-mono truncate max-w-[100px]" title={account.UTR}>
+                                        <td className="p-4 text-neutral-500 text-xs font-mono truncate max-w-[150px]" title={account.UTR}>
                                             {account.UTR}
                                         </td>
                                     </tr>
-                                );
-                            })}
-                            {loading && (
-                                <tr>
-                                    <td colSpan="7" className="p-8 text-center text-neutral-500 font-mono animate-pulse">
-                                        LOADING_DATA_STREAM...
-                                    </td>
-                                </tr>
-                            )}
-                            {!loading && accounts.length === 0 && (
-                                <tr>
-                                    <td colSpan="7" className="p-8 text-center text-neutral-500 font-mono">
-                                        NO_RECORDS_FOUND
-                                    </td>
-                                </tr>
+                                ))
                             )}
                         </tbody>
                     </table>
+                </div>
+                <div className="p-4 border-t border-neutral-800 bg-neutral-950/50 flex justify-between items-center text-xs text-neutral-500 font-mono">
+                    <span>PAGE {page} OF {totalPages || 1}</span>
+                    <div className="flex gap-2">
+                        <button
+                            disabled={page === 1}
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            className="px-3 py-1 bg-neutral-900 border border-neutral-800 rounded disabled:opacity-50 hover:border-emerald-500/30 transition-colors flex items-center gap-1"
+                        >
+                            <ChevronLeft size={12} /> PREV
+                        </button>
+                        <button
+                            disabled={page === totalPages || totalPages === 0}
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            className="px-3 py-1 bg-neutral-900 border border-neutral-800 rounded disabled:opacity-50 hover:border-emerald-500/30 transition-colors flex items-center gap-1"
+                        >
+                            NEXT <ChevronRight size={12} />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

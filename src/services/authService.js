@@ -55,6 +55,7 @@ export const authService = {
         } catch (error) {
             console.error("Logout failed:", error);
         } finally {
+            localStorage.removeItem("userRole");
             window.location.reload();
         }
     },

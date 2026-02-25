@@ -97,7 +97,7 @@ export const postService = {
                     },
                     comments: 0,
                     // Check for various possible casing/names from backend
-                    isLiked: post.isLiked || post.IsLiked || post.liked || false
+                    isLiked: post.isliked || post.isLiked || post.IsLiked || post.liked || false
                 }));
             }
             return [];

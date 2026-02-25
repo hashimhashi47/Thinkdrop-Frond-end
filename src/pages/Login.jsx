@@ -25,8 +25,17 @@ export default function Login() {
         return;
       }
 
-      // Only if there is no Error key, we navigate to the landing page
-      navigate("/");
+      // Only if there is no Error key, we evaluate role and navigate
+      const userData = result.Sucess?.data || {};
+      const role = userData.Role || userData.role || "user"; // Fallback to "user" if undefined but successful
+
+      localStorage.setItem("userRole", role.toLowerCase());
+
+      if (role.toLowerCase() === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       console.error("Network or Server Error", err);
       setError("Something went wrong with the server.");

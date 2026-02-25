@@ -73,6 +73,7 @@ export const userService = {
                     totalLikes: wallet.TotalLikes || 0,
                     walletId: wallet.WalletID,
                     status: wallet.IsWalletActive,
+                    isBlocked: wallet.IsWalletBlocked || false,
                     // These are still managed on frontend or calculated
                     level: wallet.TotalLikes > 5000 ? "Gold Member" : "Silver Member",
                     levelProgress: Math.min(Math.floor((wallet.TotalLikes / 10000) * 100), 100),

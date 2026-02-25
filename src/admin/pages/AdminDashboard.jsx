@@ -117,30 +117,6 @@ const AdminDashboard = () => {
         };
     }, [on]);
 
-    // useEffect(() => {
-    //     const handleStats = (payload) => {
-    //         if (payload?.data) {
-    //             setStats(payload.data);
-    //         }
-    //     };
-
-    //     const handlePosts = (payload) => {
-    //         if (Array.isArray(payload?.data)) {
-    //             setLogs(payload.data);
-    //         }
-    //     };
-
-    //     const unsubStats = on("UPDATE", handleStats);
-    //     const unsubPosts = on("UPDATE_POST", handlePosts);
-
-    //     return () => {
-    //         if (unsubStats) unsubStats();
-    //         if (unsubPosts) unsubPosts();
-    //     };
-    // }, []);
-
-
-
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen bg-black text-emerald-500 font-mono text-sm animate-pulse tracking-widest">
