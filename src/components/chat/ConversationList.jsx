@@ -3,13 +3,24 @@ import { User, Search, Hash } from "lucide-react";
 
 export default function ConversationList({ conversations, activeId, onSelect, myId }) {
 
+    const isMe = (id) => myId != null && String(id) === String(myId);
+
     // Helper to extract a display name when only user IDs are available
-    const getOtherUserId = (conv) => {
+    const getOtherUserName = (conv) => {
         if (!conv) return "Unknown";
-        if (conv.User1ID === myId) return conv.User2ID;
-        if (conv.User2ID === myId) return conv.User1ID;
-        // Fallback if myId is undefined: just pick the one that isn't 0
-        return conv.User2ID !== 0 ? conv.User2ID : conv.User1ID;
+        if (isMe(conv.User1ID)) return conv.User2NAME || conv.User2ID;
+        if (isMe(conv.User2ID)) return conv.User1NAME || conv.User1ID;
+        // Fallback if myId is undefined: just pick the one that isn't empty/0
+        return conv.User2NAME || conv.User2ID || conv.User1NAME || conv.User1ID;
+    };
+
+    // Helper to extract an avatar image url when available
+    const getOtherUserAvatar = (conv) => {
+        if (!conv) return null;
+        if (isMe(conv.User1ID)) return conv.User2ImageUrl;
+        if (isMe(conv.User2ID)) return conv.User1ImageUrl;
+        // Fallback
+        return conv.User2ImageUrl || conv.User1ImageUrl;
     };
 
     return (
@@ -46,7 +57,8 @@ export default function ConversationList({ conversations, activeId, onSelect, my
                 ) : (
                     conversations.map((conv) => {
                         const isSelect = activeId === conv.ID;
-                        const partnerId = getOtherUserId(conv);
+                        const partnerName = getOtherUserName(conv);
+                        const partnerAvatar = getOtherUserAvatar(conv);
                         const displayTime = new Date(conv.CreatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 
                         return (
@@ -68,7 +80,11 @@ export default function ConversationList({ conversations, activeId, onSelect, my
                                     <div className={`h-12 w-12 rounded-full flex items-center justify-center border-2 transition-colors duration-300 shadow-sm overflow-hidden ` +
                                         (isSelect ? "border-brand-primary bg-brand-primary/10 text-brand-primary" : "border-[#2D2D44] bg-[#2D2D44] text-gray-400 group-hover:border-white/10")
                                     }>
-                                        <User size={20} className={isSelect ? "opacity-100" : "opacity-70"} />
+                                        {partnerAvatar ? (
+                                            <img src={partnerAvatar} alt="avatar" className={`h-full w-full object-cover transition-all duration-300 ${isSelect ? "opacity-100" : "opacity-80 group-hover:opacity-100"}`} />
+                                        ) : (
+                                            <User size={20} className={isSelect ? "opacity-100" : "opacity-70"} />
+                                        )}
                                     </div>
                                     <span className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-green-500 rounded-full border-2 border-[#11121C] shadow-sm"></span>
                                 </div>
@@ -76,7 +92,7 @@ export default function ConversationList({ conversations, activeId, onSelect, my
                                 <div className="flex-1 min-w-0 pr-1">
                                     <div className="flex justify-between items-baseline mb-1">
                                         <h3 className={`font-semibold text-sm truncate transition-colors duration-300 ${isSelect ? "text-white font-bold" : "text-gray-200 group-hover:text-white"}`}>
-                                            User ID: {partnerId}
+                                            {partnerName}
                                         </h3>
                                         <span className={`text-xs whitespace-nowrap ml-2 transition-colors ${isSelect ? "text-brand-primary/80 font-medium" : "text-gray-500"}`}>
                                             {displayTime}

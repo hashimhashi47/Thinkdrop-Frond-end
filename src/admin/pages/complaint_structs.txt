@@ -1,0 +1,75 @@
+package models
+
+import "time"
+
+// Data structure based on the provided JSON response for complaints
+
+type ComplaintResponse struct {
+	Success struct {
+		Data  []Complaint `json:"data"`
+		Total int         `json:"total"`
+	} `json:"Sucess"` // Note: typo "Sucess" is kept to match JSON
+}
+
+type Complaint struct {
+	ID          uint      `json:"ID"`
+	CreatedAt   time.Time `json:"CreatedAt"`
+	UpdatedAt   time.Time `json:"UpdatedAt"`
+	DeletedAt   *time.Time`json:"DeletedAt"`
+	Type        string    `json:"Type"`
+	Description string    `json:"Description"`
+	Status      string    `json:"Status"` // PENDING, ACCEPTED, REJECTED
+	UserID      uint      `json:"UserID"`
+	User        User      `json:"User"`
+}
+
+type User struct {
+	ID            uint         `json:"ID"`
+	CreatedAt     time.Time    `json:"CreatedAt"`
+	UpdatedAt     time.Time    `json:"UpdatedAt"`
+	DeletedAt     *time.Time   `json:"DeletedAt"`
+	FullName      string       `json:"FullName"`
+	AnonymousName string       `json:"AnonymousName"`
+	Verify        bool         `json:"Verify"`
+	Email         string       `json:"Email"`
+	Password      string       `json:"Password"`
+	Role          string       `json:"Role"`
+	IsBlocked     bool         `json:"IsBlocked"`
+	ImageURL      string       `json:"image_url"`
+	Bio           string       `json:"bio"`
+	Following     interface{}  `json:"Following"`
+	Followers     interface{}  `json:"Followers"`
+	Posts         interface{}  `json:"Posts"`
+	Wallet        Wallet       `json:"Wallet"`
+	BankAccount   BankAccount  `json:"BankAccount"`
+	Withdrawals   interface{}  `json:"Withdrawals"`
+	SelectedSubs  interface{}  `json:"SelectedSubs"`
+}
+
+type Wallet struct {
+	ID              uint      `json:"ID"`
+	WalletID        string    `json:"WalletID"`
+	UserID          uint      `json:"UserID"`
+	BankAccountID   *uint     `json:"BankAccountID"`
+	BankAccount     interface{}`json:"BankAccount"`
+	IsWalletActive  string    `json:"IsWalletActive"`
+	IsWalletBlocked bool      `json:"IsWalletBlocked"`
+	PointsAvailable float64   `json:"PointsAvailable"`
+	TotalLikes      int       `json:"TotalLikes"`
+	CreatedAt       time.Time `json:"CreatedAt"`
+	UpdatedAt       time.Time `json:"UpdatedAt"`
+}
+
+type BankAccount struct {
+	ID                    uint      `json:"ID"`
+	UserID                uint      `json:"UserID"`
+	AccountHolderName     string    `json:"AccountHolderName"`
+	AccountNumber         string    `json:"AccountNumber"`
+	IFSCCode              string    `json:"IFSCCode"`
+	BankName              string    `json:"BankName"`
+	RazorpayContactID     string    `json:"RazorpayContactID"`
+	RazorpayFundAccountID string    `json:"RazorpayFundAccountID"`
+	IsVerified            bool      `json:"IsVerified"`
+	CreatedAt             time.Time `json:"CreatedAt"`
+	UpdatedAt             time.Time `json:"UpdatedAt"`
+}

@@ -68,7 +68,11 @@ const AllPosts = () => {
 
     const handleBlockToggle = async (post) => {
         try {
-            await adminService.blockPost(post.id);
+            if (post.isblocked) {
+                await adminService.unblockPost(post.id);
+            } else {
+                await adminService.blockPost(post.id);
+            }
             // Optimistically update
             setPosts(prev => prev.map(p => p.id === post.id ? { ...p, isblocked: !p.isblocked } : p));
         } catch (error) {

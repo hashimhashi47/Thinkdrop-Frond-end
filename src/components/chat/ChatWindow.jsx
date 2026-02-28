@@ -43,9 +43,16 @@ export default function ChatWindow({ conversation, messages, onSendMessage, myId
             </div>
         )
     }
+    const isUserMe = (id) => myId != null && String(id) === String(myId);
 
-    // Determine the partner's ID for header display
-    const partnerId = conversation.User1ID === myId ? conversation.User2ID : (myId ? conversation.User1ID : conversation.User2ID || conversation.User1ID);
+    // Determine the partner's ID for header display and logic
+    const partnerId = isUserMe(conversation.User1ID) ? conversation.User2ID : (isUserMe(conversation.User2ID) ? conversation.User1ID : (conversation.User2ID || conversation.User1ID));
+
+    // Determine the partner's name for header display
+    const partnerName = isUserMe(conversation.User1ID) ? (conversation.User2NAME || conversation.User2ID) : (isUserMe(conversation.User2ID) ? (conversation.User1NAME || conversation.User1ID) : (conversation.User2NAME || conversation.User2ID || conversation.User1NAME || conversation.User1ID));
+
+    // Determine the partner's avatar
+    const partnerAvatar = isUserMe(conversation.User1ID) ? conversation.User2ImageUrl : (isUserMe(conversation.User2ID) ? conversation.User1ImageUrl : (conversation.User2ImageUrl || conversation.User1ImageUrl));
 
     return (
         <div className="md:col-span-8 lg:col-span-9 flex flex-col bg-[#1A1B29] h-[calc(100vh-64px)] relative overflow-hidden">
@@ -58,14 +65,18 @@ export default function ChatWindow({ conversation, messages, onSendMessage, myId
                     <div className="relative">
                         <div className="h-11 w-11 rounded-full bg-gradient-to-tr from-brand-primary to-purple-600 p-[2px] shadow-lg shadow-purple-900/20">
                             <div className="h-full w-full bg-[#1A1B29] rounded-full flex items-center justify-center border border-transparent overflow-hidden">
-                                <User size={20} className="text-gray-300" />
+                                {partnerAvatar ? (
+                                    <img src={partnerAvatar} alt={partnerName} className="h-full w-full object-cover" />
+                                ) : (
+                                    <User size={20} className="text-gray-300" />
+                                )}
                             </div>
                         </div>
                         <span className="absolute bottom-0 right-0 h-3.5 w-3.5 bg-green-500 rounded-full border-[3px] border-[#1A1B29]"></span>
                     </div>
                     <div>
                         <h3 className="font-bold text-white text-base group-hover:text-brand-primary transition-colors">
-                            User {partnerId}
+                            {partnerName}
                         </h3>
                         <div className="flex items-center gap-1.5">
                             <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
@@ -98,7 +109,7 @@ export default function ChatWindow({ conversation, messages, onSendMessage, myId
                     </div>
                 ) : (
                     messages.map((msg, index) => {
-                        const isMe = msg.sender_id === myId || msg.sender_id === "me" || (!myId && msg.sender_id !== partnerId);
+                        const isMe = isUserMe(msg.sender_id) || String(msg.sender_id) === "me" || (!myId && String(msg.sender_id) !== String(partnerId));
 
                         // Check if msg is just a temporary optimistic update
                         const isOptimistic = msg.id && msg.id.toString().length > 10;
@@ -106,8 +117,8 @@ export default function ChatWindow({ conversation, messages, onSendMessage, myId
                         return (
                             <div key={index} className={`flex ${isMe ? "justify-end" : "justify-start"} animate-in slide-in-from-bottom-2 fade-in duration-300`}>
                                 <div className={`max-w-[75%] break-words p-4 text-[15px] leading-relaxed relative group ${isMe
-                                        ? "bg-gradient-to-br from-brand-primary to-[#6366f1] text-white rounded-[20px] rounded-tr-[4px] shadow-lg shadow-brand-primary/20"
-                                        : "bg-[#2A2B3D]/80 backdrop-blur-md text-gray-100 border border-white/5 rounded-[20px] rounded-tl-[4px] shadow-sm"
+                                    ? "bg-gradient-to-br from-brand-primary to-[#6366f1] text-white rounded-[20px] rounded-tr-[4px] shadow-lg shadow-brand-primary/20"
+                                    : "bg-[#2A2B3D]/80 backdrop-blur-md text-gray-100 border border-white/5 rounded-[20px] rounded-tl-[4px] shadow-sm"
                                     }`}>
                                     <p className="whitespace-pre-wrap">{msg.content || msg.text || ""}</p>
 

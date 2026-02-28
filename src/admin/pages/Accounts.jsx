@@ -68,7 +68,7 @@ const Accounts = () => {
 
     // WebSocket Listeners
     useEffect(() => {
-        const unsubscribeAccounts = on("UPDATE_ACCOUNT", (payload) => {
+        const unsubscribeAccounts = on("UPDATE_ACCOUNTS", (payload) => {
             console.log("WebSocket Received [UPDATE_ACCOUNT]:", payload);
             fetchStats();
 

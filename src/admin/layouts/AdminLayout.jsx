@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, AlertTriangle, Settings, LogOut, CreditCard, Wallet, User } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, AlertTriangle, Settings, LogOut, CreditCard, Wallet, User, MessageSquareWarning } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { adminService } from '../../api/adminService';
 
@@ -13,6 +13,7 @@ const AdminLayout = () => {
         { path: '/admin/interests', label: 'Interests', icon: Settings },
         { path: '/admin/posts', label: 'Surveillance', icon: AlertTriangle },
         { path: '/admin/all-posts', label: 'All Posts', icon: FileText },
+        { path: '/admin/reports', label: 'Reports', icon: MessageSquareWarning },
         { path: '/admin/profile', label: 'Profile', icon: User },
     ];
 

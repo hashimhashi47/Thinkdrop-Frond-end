@@ -3,6 +3,11 @@ import apiClient from "../api/client";
 export const authService = {
     login: async (email, password) => {
         const response = await apiClient.post("/auth/login", { email, password });
+
+        // --- TEMPORARY PROCESS ---
+        if (response.data?.Sucess?.data?.AccessToken) {
+            localStorage.setItem("access_token", response.data.Sucess.data.AccessToken);
+        }
         // Token handling removed for cookie-based auth
         // console.log(response.data)
         return response.data;
@@ -56,6 +61,7 @@ export const authService = {
             console.error("Logout failed:", error);
         } finally {
             localStorage.removeItem("userRole");
+            localStorage.removeItem("access_token");
             window.location.reload();
         }
     },

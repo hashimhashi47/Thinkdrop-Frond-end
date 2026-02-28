@@ -42,6 +42,19 @@ const mockActivityLogs = [
     { id: 6, user: "USER_0021", action: "New account registration", time: "00:12:30", status: "normal" },
 ];
 
+const mockReports = Array.from({ length: 25 }, (_, i) => ({
+    id: i + 1,
+    user: {
+        Name: `User Name ${i + 10}`,
+        anonymous_name: `tester_${i + 10}`,
+        avatarurl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`
+    },
+    type: ['Bug Report', 'Feature Request', 'UI Glitch', 'Performance Issue', 'General Feedback'][Math.floor(Math.random() * 5)],
+    description: `This is a sample app feedback or bug description for report ${i + 1}. The app crashed when I tried to do X, Y, and Z. Please fix it.`,
+    status: 'Pending',
+    createdAt: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toISOString()
+}));
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 import apiClient from "./client";
@@ -175,9 +188,45 @@ export const adminService = {
     },
 
     getActivityLogs: async () => {
-        const response = await apiClient.get('/admin/getpoststats?limit=10&offset=0');
-        // Matches your JSON: { "Sucess": { "data": [...] } }
-        return response.data.Sucess.data;
+        try {
+            const response = await apiClient.get('/admin/getpoststats?limit=10&offset=0');
+            // Matches your JSON: { "Sucess": { "data": [...] } }
+            return response.data?.Sucess?.data || [];
+        } catch (error) {
+            console.error("Failed to fetch activity logs:", error);
+            return [];
+        }
+    },
+
+    getReports: async (page = 1, limit = 10) => {
+        try {
+            const offset = (page - 1) * limit;
+            const response = await apiClient.get('/admin/complaints', {
+                params: { limit, offset }
+            });
+
+            const result = response.data?.Sucess || {};
+
+            return {
+                data: result.data || [],
+                total: result.total || 0,
+                totalPages: Math.ceil((result.total || 0) / limit),
+            };
+        } catch (error) {
+            console.error("Failed to fetch reports:", error);
+            return { data: [], total: 0, totalPages: 1 };
+        }
+    },
+
+    updateReportStatus: async (reportId, status) => {
+        try {
+            // Adjust the endpoint if your backend uses a different route for status updates
+            const response = await apiClient.put(`/admin/complaints/${reportId}`, { status });
+            return response.data;
+        } catch (error) {
+            console.error("Failed to update report status:", error);
+            throw error;
+        }
     },
 
 
@@ -259,6 +308,16 @@ export const adminService = {
             return response.data;
         } catch (error) {
             console.error("Failed to block post:", error);
+            throw error;
+        }
+    },
+
+    unblockPost: async (postId) => {
+        try {
+            const response = await apiClient.post(`/admin/unblock-post/${postId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to unblock post:", error);
             throw error;
         }
     },

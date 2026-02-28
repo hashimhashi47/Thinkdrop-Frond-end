@@ -118,6 +118,7 @@ export const userService = {
 
                 // Map backend keys to the format your UI expects
                 return {
+                    id: rawData.ID || rawData.id,
                     name: rawData.AnonymousName,
                     bio: rawData.Bio,
                     avatar: rawData.Avatar,
@@ -506,6 +507,28 @@ export const userService = {
             return [];
         } catch (error) {
             console.error("Error refreshing withdrawal history:", error);
+            throw error;
+        }
+    },
+
+    // Report a problem (Bug, Technical Issue, etc.)
+    reportProblem: async (reportData) => {
+        try {
+            // Replace with actual endpoint once available on backend, typical form: /users/report
+            const response = await apiClient.post("/users/report-complaint", reportData);
+
+            if (response.data?.Sucess) {
+                return { success: true, data: response.data.Sucess.data };
+            }
+
+            if (response.data?.Error) {
+                throw new Error(response.data.Error.error);
+            }
+
+            return { success: true, data: response.data };
+        } catch (error) {
+            console.error("Error submitting report:", error);
+            // Re-throw so the frontend can display an error message
             throw error;
         }
     }

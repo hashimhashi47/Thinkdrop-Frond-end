@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link, Navigate, useNavigate } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import {
   User,
@@ -7,7 +7,7 @@ import {
   Loader2,
   UserPlus,
   UserMinus,
-  Users,
+  MessageCircle,
 } from "lucide-react";
 import { userService } from "../services/userService";
 import { postService } from "../services/postService";
@@ -15,6 +15,7 @@ import PostCard from "../components/home/PostCard";
 
 export default function UserProfile() {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
 
@@ -73,7 +74,7 @@ export default function UserProfile() {
       setLoading(false);
     }
   };
-  
+
   const handleFollowToggle = async () => {
     try {
       if (isFollowing) {
@@ -86,6 +87,11 @@ export default function UserProfile() {
     } catch (error) {
       console.error("Failed to toggle follow", error);
     }
+  };
+
+  const handleMessageClick = () => {
+    // Navigate to Chat page, passing the specific user ID we want to message
+    navigate("/chat", { state: { targetUserId: userId } });
   };
 
   if (loading) {
@@ -156,25 +162,33 @@ export default function UserProfile() {
               </p>
 
               <div className="flex flex-col md:flex-row items-center gap-6">
-                {/* Action Button */}
-                <button
-                  onClick={handleFollowToggle}
-                  className={`px-6 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-all ${
-                    isFollowing
-                      ? "bg-[#1E1E2E] text-white border border-white/10 hover:border-red-500/50 hover:text-red-400"
-                      : "bg-brand-primary text-white hover:bg-brand-hover shadow-lg shadow-brand-primary/25"
-                  }`}
-                >
-                  {isFollowing ? (
-                    <>
-                      <UserMinus size={16} /> Unfollow
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus size={16} /> Follow
-                    </>
-                  )}
-                </button>
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleFollowToggle}
+                    className={`px-6 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-all ${isFollowing
+                        ? "bg-[#1E1E2E] text-white border border-white/10 hover:border-red-500/50 hover:text-red-400"
+                        : "bg-brand-primary text-white hover:bg-brand-hover shadow-lg shadow-brand-primary/25"
+                      }`}
+                  >
+                    {isFollowing ? (
+                      <>
+                        <UserMinus size={16} /> Unfollow
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={16} /> Follow
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={handleMessageClick}
+                    className="px-6 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-all bg-[#1E1E2E] text-white border border-white/10 hover:border-brand-primary/50 hover:text-brand-primary"
+                  >
+                    <MessageCircle size={16} className="mt-0.5" /> Message
+                  </button>
+                </div>
 
                 {/* Stats (Non-clickable for visitors) */}
                 <div className="flex items-center gap-8 text-sm">

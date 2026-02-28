@@ -71,8 +71,8 @@ const AdminDashboard = () => {
                 ]);
 
                 if (isMounted) {
-                    setStats(statsData);
-                    setLogs(logsData);
+                    setStats(statsData || null);
+                    setLogs(logsData || []);
                     setLoading(false);
                 }
             } catch (error) {
@@ -193,8 +193,8 @@ const AdminDashboard = () => {
                         <span className="text-[9px] text-neutral-700">SRVC_092</span>
                     </h3>
                     <div className="space-y-1">
-                        {logs.slice(0, 7).map((log) => (
-                            <ActivityItemShort key={`short-${log.id}`} log={log} />
+                        {(logs || []).slice(0, 7).map((log) => (
+                            <ActivityItemShort key={`short-${log.id || Math.random()}`} log={log} />
                         ))}
                     </div>
                 </div>
@@ -206,12 +206,12 @@ const AdminDashboard = () => {
                             <Activity className="text-emerald-500" size={16} />
                             <span>Transmission Surveillance</span>
                         </div>
-                        <span className="text-[10px] text-neutral-600 font-mono">LOG_COUNT: {logs.length}</span>
+                        <span className="text-[10px] text-neutral-600 font-mono">LOG_COUNT: {logs?.length || 0}</span>
                     </h3>
 
                     <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                        {logs.map((log) => (
-                            <div key={log.id} className="border-l border-emerald-500/30 pl-6 py-1 relative group hover:border-emerald-500 transition-colors">
+                        {(logs || []).map((log) => (
+                            <div key={log.id || Math.random()} className="border-l border-emerald-500/30 pl-6 py-1 relative group hover:border-emerald-500 transition-colors">
                                 {/* Timeline Dot */}
                                 <div className="absolute -left-[5px] top-2 w-2 h-2 rounded-full bg-neutral-800 border border-emerald-500/50 group-hover:bg-emerald-500 transition-colors"></div>
 

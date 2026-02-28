@@ -49,6 +49,7 @@ class ChatService {
 
     // 2. Get Messages for a specific Conversation ID
     async getChatMessages(chatId) {
+
         try {
             const response = await apiClient.get(`/ws/chat/${chatId}/messages`);
             // Format hasn't been wrapped in "Sucess" in the user payload example, so we check directly
@@ -91,7 +92,12 @@ class ChatService {
         this.onMessageCallback = onMessageReceived;
 
         try {
-            this.socket = new WebSocket(getWsUrl());
+            // --- TEMPORARY PROCESS ---
+            const token = localStorage.getItem("access_token");
+            this.socket = new WebSocket(`ws://localhost:8000/ws/chat?token=${token}`);
+
+            // --- OLD CODE COMMENTED OUT ---
+            // this.socket = new WebSocket(getWsUrl());
 
             this.socket.onopen = () => {
                 console.log("WebSocket connected!");

@@ -28,7 +28,17 @@ export default function Signup() {
         setLoading(true);
 
         try {
-            await authService.register(formData);
+            const result = await authService.register(formData);
+
+            // Check for explicit error structure from backend if present
+            if (result && result.Error) {
+                setOtpError(result.Error.error || "Signup failed");
+                return;
+            }
+
+            // Set default role for new users
+            localStorage.setItem("userRole", "user");
+
             navigate("/select-interests"); // Redirect to Interest Selection on success
         } catch (err) {
             console.error("Signup failed", err);

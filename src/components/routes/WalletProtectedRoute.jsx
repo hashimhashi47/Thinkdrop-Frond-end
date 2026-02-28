@@ -3,11 +3,13 @@ import { Navigate, Outlet, useNavigate } from "react-router-dom";
 import { userService } from "../../services/userService";
 import Navbar from "../layout/Navbar";
 import { ShieldAlert } from "lucide-react";
+import ReportProblemModal from "../common/ReportProblemModal";
 
 export default function WalletProtectedRoute() {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(true);
     const [isBlocked, setIsBlocked] = useState(false);
+    const [isSupportOpen, setIsSupportOpen] = useState(false);
 
     useEffect(() => {
         const checkWallet = async () => {
@@ -73,13 +75,18 @@ export default function WalletProtectedRoute() {
                                 support team for assistance.
                             </p>
                             <button
-                                onClick={() => alert("Support contact triggered (Mock)")}
+                                onClick={() => setIsSupportOpen(true)}
                                 className="px-8 py-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white font-bold rounded-xl transition-all duration-300 border border-red-500/30 hover:border-transparent w-full"
                             >
                                 Contact Support
                             </button>
                         </div>
                     </div>
+
+                    <ReportProblemModal
+                        isOpen={isSupportOpen}
+                        onClose={() => setIsSupportOpen(false)}
+                    />
                 </main>
             </div>
         );

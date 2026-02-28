@@ -30,6 +30,7 @@ import AllPosts from "./admin/pages/AllPosts";
 import WalletManagement from "./admin/pages/Wallet";
 import AdminProfile from "./admin/pages/Profile";
 import Interests from "./admin/pages/Interests";
+import Reports from "./admin/pages/Reports";
 
 function App() {
 
@@ -71,6 +72,7 @@ function App() {
           <Route path="all-posts" element={<AllPosts />} />
           <Route path="profile" element={<AdminProfile />} />
           <Route path="interests" element={<Interests />} />
+          <Route path="reports" element={<Reports />} />
         </Route>
       </Route>
     </Routes>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../components/layout/Navbar";
 import ConversationList from "../components/chat/ConversationList";
 import ChatWindow from "../components/chat/ChatWindow";
@@ -6,14 +7,20 @@ import { chatService } from "../services/chatService";
 import { userService } from "../services/userService";
 
 export default function Chat() {
+    const location = useLocation();
+    const navigate = useNavigate();
+
     const [conversations, setConversations] = useState([]);
     const [activeChat, setActiveChat] = useState(null);
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const [myId, setMyId] = useState(null);
+    const myIdRef = useRef(null);
+    const [myName, setMyName] = useState(null);
 
     // Use a ref to keep track of active chat for websocket callback
     const activeChatRef = useRef(activeChat);
+    const hasInitializedRef = useRef(false);
 
     useEffect(() => {
         activeChatRef.current = activeChat;
@@ -21,20 +28,68 @@ export default function Chat() {
 
     // Load initial data and connect websocket
     useEffect(() => {
+        if (hasInitializedRef.current) return;
+        hasInitializedRef.current = true;
+
         const initChat = async () => {
+            let profileName = null;
             try {
+                // Try to get current user ID from the access token first for reliability
+                const token = localStorage.getItem("access_token");
+                if (token) {
+                    try {
+                        const payloadBase64 = token.split('.')[1];
+                        const decodedPayload = atob(payloadBase64);
+                        const payloadObj = JSON.parse(decodedPayload);
+                        if (payloadObj && payloadObj.userid) {
+                            setMyId(payloadObj.userid);
+                            myIdRef.current = payloadObj.userid;
+                        }
+                    } catch (e) {
+                        console.error("Failed to decode token for myId", e);
+                    }
+                }
+
                 // Try to get current user ID to distinguish my messages
                 const profileObj = await userService.getProfile();
                 // A common pattern is passing user 'id' if 'ID' isn't explicitly returned
                 // If profileObj doesn't map 'id', we will depend on inference later
-                if (profileObj && profileObj.id) {
-                    setMyId(profileObj.id);
+                if (profileObj) {
+                    // Only override if we didn't already get it from the token
+                    if (profileObj.id && !myIdRef.current) {
+                        setMyId(profileObj.id);
+                        myIdRef.current = profileObj.id;
+                    }
+                    if (profileObj.name) {
+                        setMyName(profileObj.name);
+                        profileName = profileObj.name;
+                    }
                 }
             } catch (err) {
                 console.error("Failed to load profile for chat", err);
             }
 
-            loadSidebar();
+            const targetUserId = location.state?.targetUserId;
+
+            if (targetUserId) {
+                // Clear the state so it doesn't trigger again on reload
+                window.history.replaceState({}, document.title);
+
+                try {
+                    // Force the creation of the conversation if it doesn't exist yet
+                    // The backend should return the conversation ID if it was just created 
+                    // or if it already exists
+                    const newConversation = await chatService.startConversation(targetUserId);
+
+                    // Tell loadSidebar to look out for this conversation ID to select it
+                    await loadSidebar(newConversation?.ID, profileName);
+                } catch (err) {
+                    console.error("Failed to start conversation with target user", err);
+                    await loadSidebar(null, profileName);
+                }
+            } else {
+                await loadSidebar(null, profileName);
+            }
 
             chatService.connect((incomingMsg) => {
                 // This callback fires when a new message arrives via WS
@@ -49,39 +104,80 @@ export default function Chat() {
         };
     }, []);
 
-    const loadSidebar = async () => {
+    const loadSidebar = async (autoSelectId = null, fallbackName = null) => {
         setLoading(true);
         try {
             let data = await chatService.getSidebar();
 
-            // If we don't know myId yet, we can try to guess it from conversations
-            let currentMyId = myId;
+            // If we don't know myId yet, we can try to guess it from conversations or name
+            let currentMyId = myIdRef.current || myId;
             if (!currentMyId && data && data.length > 0) {
-                // Try to find the common user ID across all conversations
-                const userIds = new Map();
-                data.forEach(c => {
-                    userIds.set(c.User1ID, (userIds.get(c.User1ID) || 0) + 1);
-                    userIds.set(c.User2ID, (userIds.get(c.User2ID) || 0) + 1);
-                });
-                // The one with the most occurrences is likely us
-                let maxCount = 0;
                 let likelyMyId = null;
-                for (const [id, count] of userIds.entries()) {
-                    if (id !== 0 && count > maxCount) {
-                        maxCount = count;
-                        likelyMyId = id;
+                const matchName = myName || fallbackName;
+
+                // 1. Precise Match: Look for our own Name in the conversation participants
+                if (matchName) {
+                    for (const c of data) {
+                        if (c.User1NAME === matchName) {
+                            likelyMyId = c.User1ID; break;
+                        } else if (c.User2NAME === matchName) {
+                            likelyMyId = c.User2ID; break;
+                        }
                     }
                 }
+
+                // 2. Fallback Match: Find the common user ID across all conversations
+                if (!likelyMyId) {
+                    const userIds = new Map();
+                    // Just count occurrences
+                    data.forEach(c => {
+                        userIds.set(c.User1ID, (userIds.get(c.User1ID) || 0) + 1);
+                        userIds.set(c.User2ID, (userIds.get(c.User2ID) || 0) + 1);
+                    });
+
+                    let maxCount = 0;
+                    for (const [id, count] of userIds.entries()) {
+                        if (id !== 0 && count > maxCount) {
+                            maxCount = count;
+                            likelyMyId = id;
+                        }
+                    }
+                }
+
+                // 3. Confirm
                 if (likelyMyId) {
                     setMyId(likelyMyId);
+                    myIdRef.current = likelyMyId;
                     currentMyId = likelyMyId;
                 }
             }
 
-            // Sort conversations by created at descending
+            // Sort and deduplicate conversations
             if (data && data.length > 0) {
-                data.sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
-                setConversations(data);
+                const uniqueData = [];
+                const seenIds = new Set();
+                const seenPairs = new Set();
+
+                for (const c of data) {
+                    if (seenIds.has(c.ID)) continue;
+
+                    const pairKey = [c.User1ID, c.User2ID].sort().join('-');
+                    if (seenPairs.has(pairKey)) continue;
+
+                    seenIds.add(c.ID);
+                    seenPairs.add(pairKey);
+                    uniqueData.push(c);
+                }
+
+                uniqueData.sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
+                setConversations(uniqueData);
+
+                if (autoSelectId) {
+                    const targetConv = uniqueData.find(c => c.ID === autoSelectId);
+                    if (targetConv) {
+                        setActiveChat(targetConv);
+                    }
+                }
             }
         } catch (error) {
             console.error("Failed to load sidebar", error);
@@ -121,7 +217,32 @@ export default function Chat() {
             const MsgConvoMatch = msg.conversation_id && msg.conversation_id === currentActive.ID;
 
             if (MsgConvoMatch || MsgParticipantMatch) {
-                setMessages((prev) => [...prev, msg]);
+                setMessages((prev) => {
+                    // Check if it's our own message being echoed back
+                    const currentMyId = myIdRef.current;
+                    const isFromMe = String(msg.sender_id) === String(currentMyId);
+
+                    if (isFromMe) {
+                        let replaced = false;
+                        const newMessages = prev.map(p => {
+                            const isOptimistic = p.id && p.id.toString().length > 10;
+                            if (!replaced && isOptimistic && p.content === msg.content) {
+                                replaced = true;
+                                return msg; // replace optimistic with real message
+                            }
+                            return p;
+                        });
+
+                        if (replaced) return newMessages;
+                    }
+
+                    // To prevent duplicate real messages if any
+                    if (msg.id && prev.some(p => p.id === msg.id)) {
+                        return prev;
+                    }
+
+                    return [...prev, msg];
+                });
             }
         }
 
