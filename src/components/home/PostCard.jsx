@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, Share2, MoreHorizontal, User, Hash, Flag } from "lucide-react";
+import toast from 'react-hot-toast';
 import { postService } from "../../services/postService";
 
 export default function PostCard({ post }) {
@@ -72,10 +73,10 @@ export default function PostCard({ post }) {
       setShowReportModal(false);
       setReportReason("");
       setCustomReason("");
-      alert("Post reported successfully. Our team will review it shortly.");
+      toast.success("Post reported successfully. Our team will review it shortly.");
     } catch (error) {
       console.error("Failed to report post:", error);
-      alert("Failed to send report. Please try again.");
+      toast.error("Failed to send report. Please try again.");
     } finally {
       setIsReporting(false);
     }

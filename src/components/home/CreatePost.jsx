@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { User, Loader2, PenTool, Hash, X } from "lucide-react";
 import { postService } from "../../services/postService";
+import toast from 'react-hot-toast';
 import { userService } from "../../services/userService";
 
 export default function CreatePost({ onPostCreated }) {
@@ -58,7 +59,7 @@ export default function CreatePost({ onPostCreated }) {
       }
     } catch (error) {
       console.error("Failed to create post:", error);
-      alert("Failed to post. Please try again.");
+      toast.error("Failed to post. Please try again.");
     } finally {
       setIsPosting(false);
     }

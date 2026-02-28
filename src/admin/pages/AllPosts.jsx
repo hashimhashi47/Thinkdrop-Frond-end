@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminService } from '../../api/adminService';
 import { FileText, CheckCircle, Ban, Edit3, X, RefreshCw, ChevronLeft, ChevronRight, ThumbsUp, AlertTriangle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { useSocket } from '../../hooks/useSocket';
 
 const AllPosts = () => {
@@ -77,7 +78,7 @@ const AllPosts = () => {
             setPosts(prev => prev.map(p => p.id === post.id ? { ...p, isblocked: !p.isblocked } : p));
         } catch (error) {
             console.error("Error toggling block status:", error);
-            alert("Failed to update post status.");
+            toast.error("Failed to update post status.");
         }
     };
 
@@ -90,7 +91,7 @@ const AllPosts = () => {
             setPosts(prev => prev.filter(post => post.id !== id));
         } catch (error) {
             console.error("Error deleting post:", error);
-            alert("Failed to delete post. Check console for details.");
+            toast.error("Failed to delete post. Check console for details.");
         }
     };
 
@@ -101,7 +102,7 @@ const AllPosts = () => {
 
     const handleSaveInterest = async (postId) => {
         if (selectedInterestIds.length === 0) {
-            alert("Please select at least one interest");
+            toast.error("Please select at least one interest");
             return;
         }
 
@@ -133,7 +134,7 @@ const AllPosts = () => {
             setEditingPostId(null);
         } catch (error) {
             console.error("Error updating interest:", error);
-            alert("Failed to update interest. Check console.");
+            toast.error("Failed to update interest. Check console.");
         }
     };
 

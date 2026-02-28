@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../components/layout/Navbar";
 import { ArrowLeft, Save, Check, RefreshCw, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
 import { userService } from "../services/userService";
 
 export default function EditProfile() {
@@ -85,7 +86,7 @@ export default function EditProfile() {
       navigate("/profile");
     } catch (error) {
       console.error("Update failed:", error);
-      alert("Update failed: " + error.message);
+      toast.error("Update failed: " + error.message);
     } finally {
       setLoading(false);
     }

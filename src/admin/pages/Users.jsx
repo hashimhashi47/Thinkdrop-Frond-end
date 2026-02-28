@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../../api/adminService';
 import { useSocket } from '../../hooks/useSocket';
+import toast from 'react-hot-toast';
 import { Search, MoreVertical, Shield, ShieldAlert, Ban, CheckCircle, ChevronLeft, ChevronRight, UserPlus, Edit2, Trash2, X } from 'lucide-react';
 
 const UserManagement = () => {
@@ -68,7 +69,7 @@ const UserManagement = () => {
             fetchUsers();
         } catch (error) {
             console.error(`Failed to ${action} user`, error);
-            alert(`Failed to ${action} user. Please try again.`);
+            toast.error(`Failed to ${action} user. Please try again.`);
         }
     };
 
@@ -80,7 +81,7 @@ const UserManagement = () => {
             fetchUsers();
         } catch (error) {
             console.error("Failed to delete user", error);
-            alert("Failed to delete user. Please try again.");
+            toast.error("Failed to delete user. Please try again.");
         }
     };
 
@@ -130,7 +131,7 @@ const UserManagement = () => {
             handleCloseModal();
         } catch (error) {
             console.error(`Failed to ${modalMode} user`, error);
-            alert(`Failed to ${modalMode} user. Check console for details.`);
+            toast.error(`Failed to ${modalMode} user. Check console for details.`);
         } finally {
             setIsSubmitting(false);
         }

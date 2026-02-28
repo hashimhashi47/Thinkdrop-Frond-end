@@ -9,6 +9,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from 'react-hot-toast';
 import { userService } from "../services/userService";
 
 export default function Withdraw() {
@@ -70,7 +71,7 @@ export default function Withdraw() {
         bank_account_id: selectedAccount, // Passing the specific ID helps the backend avoid "Record Not Found"
       });
 
-      alert("Withdrawal initiated successfully!");
+      toast.success("Withdrawal initiated successfully!");
       navigate("/rewards");
     } catch (error) {
       // Check if the backend sent a specific error message

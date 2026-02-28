@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Mail, Shield, ShieldAlert, Key, Save, Camera, Edit2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { adminService } from '../../api/adminService';
 
 const AdminProfile = () => {
@@ -77,7 +78,7 @@ const AdminProfile = () => {
             setFormData(prev => ({ ...prev, Password: '' }));
         } catch (error) {
             console.error('Failed to update profile:', error);
-            alert('Failed to update profile. Please try again.');
+            toast.error('Failed to update profile. Please try again.');
         } finally {
             setIsSaving(false);
         }

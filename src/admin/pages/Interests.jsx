@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Plus, Edit2, Trash2, ChevronDown, ChevronRight, Save, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { adminService } from '../../api/adminService';
 
 export default function Interests() {
@@ -63,7 +64,7 @@ export default function Interests() {
             setIsCategoryModalOpen(false);
             fetchInterests(); // Refresh the data from the server
         } catch (error) {
-            alert("Failed to save category. Check console for details.");
+            toast.error("Failed to save category. Check console for details.");
         }
     };
 
@@ -73,7 +74,7 @@ export default function Interests() {
                 await adminService.deleteMainInterest(id);
                 fetchInterests(); // Refresh the data from the server
             } catch (error) {
-                alert("Failed to delete category.");
+                toast.error("Failed to delete category.");
             }
         }
     };
@@ -105,7 +106,7 @@ export default function Interests() {
             setIsSubModalOpen(false);
             fetchInterests(); // Refresh the data from the server
         } catch (error) {
-            alert("Failed to save sub-interest.");
+            toast.error("Failed to save sub-interest.");
         }
     };
 
@@ -115,7 +116,7 @@ export default function Interests() {
                 await adminService.deleteSubInterest(subId);
                 fetchInterests(); // Refresh the data from the server
             } catch (error) {
-                alert("Failed to delete sub-interest.");
+                toast.error("Failed to delete sub-interest.");
             }
         }
     };

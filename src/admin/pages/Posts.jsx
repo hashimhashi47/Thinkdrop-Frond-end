@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminService } from '../../api/adminService';
 import { AlertTriangle, Trash2, CheckCircle, Eye, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { useSocket } from '../../hooks/useSocket';
 
 const PostModeration = () => {
@@ -60,7 +61,7 @@ const PostModeration = () => {
             setPosts(prev => prev.filter(post => post.id !== id));
         } catch (error) {
             console.error("Error deleting post:", error);
-            alert("Failed to delete post. Check console for details.");
+            toast.error("Failed to delete post. Check console for details.");
         }
     };
 
@@ -71,7 +72,7 @@ const PostModeration = () => {
             setPosts(prev => prev.filter(post => post.id !== id));
         } catch (error) {
             console.error("Error marking post safe:", error);
-            alert("Failed to mark post safe. Check console for details.");
+            toast.error("Failed to mark post safe. Check console for details.");
         }
     };
 

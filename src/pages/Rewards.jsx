@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { userService } from "../services/userService";
-// import { postService } from "../services/postService";
+// import toast from 'react-hot-toast';
+import { postService } from "../services/postService";
 
 // Exchange Rates Configuration
 const EXCHANGE_RATES = {
@@ -62,7 +63,7 @@ export default function Rewards() {
 
       if (result.success) {
         // 2. Logic after success (e.g., close modal, show success message)
-        alert("Bank account added successfully!");
+        toast.success("Bank account added successfully!");
         // 3. Refresh the rewards data to show the new account
         fetchRewardsData();
       }

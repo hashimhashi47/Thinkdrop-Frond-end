@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { adminService } from '../../api/adminService';
 import { Search, Wallet as WalletIcon, ShieldAlert, Ban, CheckCircle, ChevronLeft, ChevronRight, Landmark } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useSocket } from '../../hooks/useSocket';
 
 const WalletManagement = () => {
@@ -63,7 +64,7 @@ const WalletManagement = () => {
             }
             fetchWallets();
         } catch (error) {
-            alert(`Failed to ${action} wallet.`);
+            toast.error(`Failed to ${action} wallet.`);
         }
     };
 
@@ -73,7 +74,7 @@ const WalletManagement = () => {
             await adminService.verifyWalletBank(bankId);
             fetchWallets();
         } catch (error) {
-            alert("Failed to verify bank account.");
+            toast.error("Failed to verify bank account.");
         }
     };
 
