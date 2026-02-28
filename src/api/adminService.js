@@ -1,62 +1,3 @@
-// Mock data for Admin Dashboard
-const MOCK_DELAY = 800;
-
-const mockUsers = Array.from({ length: 50 }, (_, i) => ({
-    id: i + 1,
-    full_name: `User Name ${i + 1}`,
-    email: `user${i + 1}@example.com`,
-    role: i % 10 === 0 ? 'admin' : 'user',
-    verify: i % 3 === 0, // Some verified, some not
-    is_blocked: i % 15 === 0, // Some blocked
-    image_url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`,
-    created_at: new Date(Date.now() - i * 86400000).toISOString(),
-}));
-
-const mockAccounts = Array.from({ length: 50 }, (_, i) => ({
-    id: i + 1,
-    userId: i + 1,
-    userName: `User_${i + 1}`,
-    balance: (Math.random() * 1000).toFixed(2),
-    pointsRedeemed: Math.floor(Math.random() * 5000),
-    lastTransaction: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toISOString().split('T')[0],
-    status: Math.random() > 0.9 ? 'Frozen' : 'Active',
-}));
-
-
-
-const mockPosts = Array.from({ length: 40 }, (_, i) => ({
-    id: i + 1,
-    author: `@author_${i}`,
-    content: `This is a suspicious post content #${i}. 需要注意.`,
-    risk: ['Low', 'Medium', 'High', 'Critical'][Math.floor(Math.random() * 4)],
-    status: 'Flagged',
-    time: `${Math.floor(Math.random() * 24)}h ago`,
-}));
-
-const mockActivityLogs = [
-    { id: 1, user: "USER_8492", action: "Posted new encrypted content", time: "00:01:23", status: "normal" },
-    { id: 2, user: "USER_1120", action: "Connection attempt failed", time: "00:02:45", status: "warning" },
-    { id: 3, user: "USER_3391", action: "Updated profile metrics", time: "00:05:12", status: "normal" },
-    { id: 4, user: "USER_7721", action: "Uploaded data packet (Img)", time: "00:08:00", status: "normal" },
-    { id: 5, user: "SYSTEM", action: "Daily purge sequence initiated", time: "00:10:00", status: "warning" },
-    { id: 6, user: "USER_0021", action: "New account registration", time: "00:12:30", status: "normal" },
-];
-
-const mockReports = Array.from({ length: 25 }, (_, i) => ({
-    id: i + 1,
-    user: {
-        Name: `User Name ${i + 10}`,
-        anonymous_name: `tester_${i + 10}`,
-        avatarurl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 10}`
-    },
-    type: ['Bug Report', 'Feature Request', 'UI Glitch', 'Performance Issue', 'General Feedback'][Math.floor(Math.random() * 5)],
-    description: `This is a sample app feedback or bug description for report ${i + 1}. The app crashed when I tried to do X, Y, and Z. Please fix it.`,
-    status: 'Pending',
-    createdAt: new Date(Date.now() - Math.floor(Math.random() * 1000000000)).toISOString()
-}));
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
 import apiClient from "./client";
 
 export const adminService = {
@@ -260,16 +201,6 @@ export const adminService = {
             console.error("Failed to delete user:", error);
             throw error;
         }
-    },
-
-    updateUserStatus: async (userId, status) => {
-        // Real API Call:
-        // await apiClient.patch(`/admin/users/${userId}/status`, { status });
-        // return { success: true };
-
-        await sleep(MOCK_DELAY);
-        console.log(`[MOCK] Updated user ${userId} status to ${status}`);
-        return { success: true };
     },
 
     blockUser: async (userId) => {
