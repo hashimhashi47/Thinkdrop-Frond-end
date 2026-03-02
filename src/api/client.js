@@ -30,7 +30,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000",
+    baseURL: import.meta.env.VITE_API_URL || "https://thinkdrop-back-end.onrender.com",
     timeout: 10000,
     withCredentials: true, // Send cookies (Refresh Token) automatically
     headers: { "Content-Type": "application/json" },
