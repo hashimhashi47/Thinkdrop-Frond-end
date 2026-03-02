@@ -104,76 +104,27 @@ export default function Chat() {
         };
     }, []);
 
-    const loadSidebar = async (autoSelectId = null, fallbackName = null) => {
+    const loadSidebar = async (autoSelectId = null) => {
         setLoading(true);
         try {
             let data = await chatService.getSidebar();
-
-            // If we don't know myId yet, we can try to guess it from conversations or name
-            let currentMyId = myIdRef.current || myId;
-            if (!currentMyId && data && data.length > 0) {
-                let likelyMyId = null;
-                const matchName = myName || fallbackName;
-
-                // 1. Precise Match: Look for our own Name in the conversation participants
-                if (matchName) {
-                    for (const c of data) {
-                        if (c.User1NAME === matchName) {
-                            likelyMyId = c.User1ID; break;
-                        } else if (c.User2NAME === matchName) {
-                            likelyMyId = c.User2ID; break;
-                        }
-                    }
-                }
-
-                // 2. Fallback Match: Find the common user ID across all conversations
-                if (!likelyMyId) {
-                    const userIds = new Map();
-                    // Just count occurrences
-                    data.forEach(c => {
-                        userIds.set(c.User1ID, (userIds.get(c.User1ID) || 0) + 1);
-                        userIds.set(c.User2ID, (userIds.get(c.User2ID) || 0) + 1);
-                    });
-
-                    let maxCount = 0;
-                    for (const [id, count] of userIds.entries()) {
-                        if (id !== 0 && count > maxCount) {
-                            maxCount = count;
-                            likelyMyId = id;
-                        }
-                    }
-                }
-
-                // 3. Confirm
-                if (likelyMyId) {
-                    setMyId(likelyMyId);
-                    myIdRef.current = likelyMyId;
-                    currentMyId = likelyMyId;
-                }
-            }
 
             // Sort and deduplicate conversations
             if (data && data.length > 0) {
                 const uniqueData = [];
                 const seenIds = new Set();
-                const seenPairs = new Set();
 
                 for (const c of data) {
-                    if (seenIds.has(c.ID)) continue;
-
-                    const pairKey = [c.User1ID, c.User2ID].sort().join('-');
-                    if (seenPairs.has(pairKey)) continue;
-
-                    seenIds.add(c.ID);
-                    seenPairs.add(pairKey);
+                    if (seenIds.has(c.conversation_id)) continue;
+                    seenIds.add(c.conversation_id);
                     uniqueData.push(c);
                 }
 
-                uniqueData.sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
+                uniqueData.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
                 setConversations(uniqueData);
 
                 if (autoSelectId) {
-                    const targetConv = uniqueData.find(c => c.ID === autoSelectId);
+                    const targetConv = uniqueData.find(c => c.conversation_id === autoSelectId);
                     if (targetConv) {
                         setActiveChat(targetConv);
                     }
@@ -189,7 +140,7 @@ export default function Chat() {
     // Load messages when active chat changes
     useEffect(() => {
         if (activeChat) {
-            loadMessages(activeChat.ID);
+            loadMessages(activeChat.conversation_id);
         }
     }, [activeChat]);
 
@@ -212,9 +163,9 @@ export default function Chat() {
 
         if (currentActive) {
             // Append message if it belongs to the active conversation
-            // Check if context maps to either user in current conversation
-            const MsgParticipantMatch = (msg.sender_id === currentActive.User1ID || msg.sender_id === currentActive.User2ID);
-            const MsgConvoMatch = msg.conversation_id && msg.conversation_id === currentActive.ID;
+            // With the new backend, currentActive is just the other user's data
+            const MsgParticipantMatch = (msg.sender_id === currentActive.user_id || msg.receiver_id === currentActive.user_id);
+            const MsgConvoMatch = msg.conversation_id && msg.conversation_id === currentActive.conversation_id;
 
             if (MsgConvoMatch || MsgParticipantMatch) {
                 setMessages((prev) => {
@@ -256,13 +207,8 @@ export default function Chat() {
         // If we don't have an active chat, but we have a receiverId (e.g. starting a chat)
         let rId = receiverId;
         if (activeChat) {
-            // Determine who is the other user
-            rId = activeChat.User1ID === myId ? activeChat.User2ID : activeChat.User1ID;
-
-            // Fallback if rId is mistakenly 0 or matches myId
-            if (rId === 0 || rId === myId) {
-                rId = (activeChat.User2ID !== myId && activeChat.User2ID !== 0) ? activeChat.User2ID : activeChat.User1ID;
-            }
+            // The active chat object now literally just holds the partner's user_id
+            rId = activeChat.user_id;
         }
 
         try {
@@ -295,7 +241,7 @@ export default function Chat() {
             <main className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-12 h-[calc(100vh-64px)] overflow-hidden border-t border-white/5">
                 <ConversationList
                     conversations={conversations}
-                    activeId={activeChat?.ID}
+                    activeId={activeChat?.conversation_id}
                     onSelect={handleSelectConversation}
                     myId={myId}
                 />

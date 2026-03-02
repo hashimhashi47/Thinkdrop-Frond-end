@@ -3,26 +3,6 @@ import { User, Search, Hash } from "lucide-react";
 
 export default function ConversationList({ conversations, activeId, onSelect, myId }) {
 
-    const isMe = (id) => myId != null && String(id) === String(myId);
-
-    // Helper to extract a display name when only user IDs are available
-    const getOtherUserName = (conv) => {
-        if (!conv) return "Unknown";
-        if (isMe(conv.User1ID)) return conv.User2NAME || conv.User2ID;
-        if (isMe(conv.User2ID)) return conv.User1NAME || conv.User1ID;
-        // Fallback if myId is undefined: just pick the one that isn't empty/0
-        return conv.User2NAME || conv.User2ID || conv.User1NAME || conv.User1ID;
-    };
-
-    // Helper to extract an avatar image url when available
-    const getOtherUserAvatar = (conv) => {
-        if (!conv) return null;
-        if (isMe(conv.User1ID)) return conv.User2ImageUrl;
-        if (isMe(conv.User2ID)) return conv.User1ImageUrl;
-        // Fallback
-        return conv.User2ImageUrl || conv.User1ImageUrl;
-    };
-
     return (
         <div className="md:col-span-4 lg:col-span-3 bg-[#11121C] border-r border-white/5 flex flex-col h-full relative overflow-hidden">
             {/* Ambient Background Gradient */}
@@ -56,14 +36,14 @@ export default function ConversationList({ conversations, activeId, onSelect, my
                     </div>
                 ) : (
                     conversations.map((conv) => {
-                        const isSelect = activeId === conv.ID;
-                        const partnerName = getOtherUserName(conv);
-                        const partnerAvatar = getOtherUserAvatar(conv);
-                        const displayTime = new Date(conv.CreatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                        const isSelect = activeId === conv.conversation_id;
+                        const partnerName = conv.user_name || "Unknown User";
+                        const partnerAvatar = conv.user_image_url || null;
+                        const displayTime = conv.created_at ? new Date(conv.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : "";
 
                         return (
                             <div
-                                key={conv.ID}
+                                key={conv.conversation_id}
                                 onClick={() => onSelect(conv)}
                                 className={`group flex items-center gap-4 p-3 rounded-2xl cursor-pointer transition-all duration-300 relative overflow-hidden ` +
                                     (isSelect
