@@ -72,7 +72,7 @@ apiClient.interceptors.response.use(
                 // 1. Call the refresh API
                 // We use basic 'axios' here to avoid triggering this interceptor again
                 await axios.post(
-                    `${apiClient.defaults.baseURL}/auth/refersh`,
+                    `${apiClient.defaults.baseURL}/auth/refresh`,
                     {},
                     { withCredentials: true }
                 );

@@ -8,14 +8,11 @@ const getCookie = (name) => {
     return "";
 };
 
-// Build WebSocket URL from the base URL
 const getWsUrl = () => {
-    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
-    // Replace http:// or https:// with ws:// or wss://
+    const baseUrl = import.meta.env.VITE_API_URL || "https://thinkdrop-back-end.onrender.com";
     let wsUrl = baseUrl.replace(/^http/, "ws") + "/ws/chat";
 
     // The backend accepts the token via query params if the cookie is not automatically sent 
-    // due to cross-origin limitations with websockets
     const token = getCookie("Access_token");
     if (token) {
         wsUrl += `?token=${token}`;
@@ -94,7 +91,7 @@ class ChatService {
         try {
             // --- TEMPORARY PROCESS ---
             const token = localStorage.getItem("access_token");
-            this.socket = new WebSocket(`ws://localhost:8000/ws/chat?token=${token}`);
+            this.socket = new WebSocket(getWsUrl());
 
             // --- OLD CODE COMMENTED OUT ---
             // this.socket = new WebSocket(getWsUrl());
