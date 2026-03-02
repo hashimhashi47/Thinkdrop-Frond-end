@@ -43,16 +43,10 @@ export default function ChatWindow({ conversation, messages, onSendMessage, myId
             </div>
         )
     }
-    const isUserMe = (id) => myId != null && String(id) === String(myId);
-
-    // Determine the partner's ID for header display and logic
-    const partnerId = isUserMe(conversation.User1ID) ? conversation.User2ID : (isUserMe(conversation.User2ID) ? conversation.User1ID : (conversation.User2ID || conversation.User1ID));
-
-    // Determine the partner's name for header display
-    const partnerName = isUserMe(conversation.User1ID) ? (conversation.User2NAME || conversation.User2ID) : (isUserMe(conversation.User2ID) ? (conversation.User1NAME || conversation.User1ID) : (conversation.User2NAME || conversation.User2ID || conversation.User1NAME || conversation.User1ID));
-
-    // Determine the partner's avatar
-    const partnerAvatar = isUserMe(conversation.User1ID) ? conversation.User2ImageUrl : (isUserMe(conversation.User2ID) ? conversation.User1ImageUrl : (conversation.User2ImageUrl || conversation.User1ImageUrl));
+    // The new backend payload gives us exactly the partner's details
+    const partnerId = conversation.user_id;
+    const partnerName = conversation.user_name || "Unknown User";
+    const partnerAvatar = conversation.user_image_url || null;
 
     return (
         <div className="md:col-span-8 lg:col-span-9 flex flex-col bg-[#1A1B29] h-[calc(100vh-64px)] relative overflow-hidden">
