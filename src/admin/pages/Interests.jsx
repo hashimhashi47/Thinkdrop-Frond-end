@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Plus, Edit2, Trash2, ChevronDown, ChevronRight, Save, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { adminService } from '../../api/adminService';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Interests() {
     const [interests, setInterests] = useState([]);
@@ -17,6 +18,15 @@ export default function Interests() {
     const [editingSub, setEditingSub] = useState(null); // null means adding new
     const [selectedParentId, setSelectedParentId] = useState(null);
     const [formData, setFormData] = useState({ name: '' });
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'danger'
+    });
 
     // Mock initial data fetch (To be replaced with real adminService methods)
     useEffect(() => {
@@ -58,8 +68,10 @@ export default function Interests() {
         try {
             if (editingCategory) {
                 await adminService.updateMainInterest(editingCategory.ID, formData.name);
+                toast.success("Category updated successfully");
             } else {
                 await adminService.createMainInterest(formData.name);
+                toast.success("Category created successfully");
             }
             setIsCategoryModalOpen(false);
             fetchInterests(); // Refresh the data from the server
@@ -69,14 +81,22 @@ export default function Interests() {
     };
 
     const deleteCategory = async (id) => {
-        if (window.confirm("Are you sure you want to delete this category and all its sub-interests?")) {
-            try {
-                await adminService.deleteMainInterest(id);
-                fetchInterests(); // Refresh the data from the server
-            } catch (error) {
-                toast.error("Failed to delete category.");
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete Category",
+            message: "Are you sure you want to delete this category and all its sub-interests? This action cannot be undone.",
+            type: 'danger',
+            confirmText: "Delete Category",
+            onConfirm: async () => {
+                try {
+                    await adminService.deleteMainInterest(id);
+                    toast.success("Category deleted successfully");
+                    fetchInterests();
+                } catch (error) {
+                    toast.error("Failed to delete category.");
+                }
             }
-        }
+        });
     };
 
     // --- Sub-Interest Handlers (MOCK IMPLEMENTATION) ---
@@ -100,8 +120,10 @@ export default function Interests() {
         try {
             if (editingSub) {
                 await adminService.updateSubInterest(editingSub.ID, formData.name);
+                toast.success("Sub-interest updated successfully");
             } else {
                 await adminService.createSubInterest(selectedParentId, formData.name);
+                toast.success("Sub-interest created successfully");
             }
             setIsSubModalOpen(false);
             fetchInterests(); // Refresh the data from the server
@@ -111,14 +133,22 @@ export default function Interests() {
     };
 
     const deleteSubInterest = async (parentId, subId) => {
-        if (window.confirm("Are you sure you want to delete this sub-interest?")) {
-            try {
-                await adminService.deleteSubInterest(subId);
-                fetchInterests(); // Refresh the data from the server
-            } catch (error) {
-                toast.error("Failed to delete sub-interest.");
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete Sub-Interest",
+            message: "Are you sure you want to delete this sub-interest?",
+            type: 'danger',
+            confirmText: "Delete",
+            onConfirm: async () => {
+                try {
+                    await adminService.deleteSubInterest(subId);
+                    toast.success("Sub-interest deleted successfully");
+                    fetchInterests();
+                } catch (error) {
+                    toast.error("Failed to delete sub-interest.");
+                }
             }
-        }
+        });
     };
 
 
@@ -332,6 +362,16 @@ export default function Interests() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                confirmText={confirmModal.confirmText}
+            />
         </div>
     );
 }

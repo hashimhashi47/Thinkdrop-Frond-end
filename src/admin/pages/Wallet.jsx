@@ -3,6 +3,7 @@ import { adminService } from '../../api/adminService';
 import { Search, Wallet as WalletIcon, ShieldAlert, Ban, CheckCircle, ChevronLeft, ChevronRight, Landmark } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSocket } from '../../hooks/useSocket';
+import ConfirmModal from '../components/ConfirmModal';
 
 const WalletManagement = () => {
     const [wallets, setWallets] = useState([]);
@@ -10,6 +11,16 @@ const WalletManagement = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'danger',
+        confirmText: 'Proceed'
+    });
 
     const { on } = useSocket();
 
@@ -52,30 +63,48 @@ const WalletManagement = () => {
     }, [on, fetchWallets]);
 
     const handleBlockToggle = async (walletId, currentStatus) => {
-        // currentStatus is IsWalletBlocked (boolean)
         const action = currentStatus ? 'unblock' : 'block';
-        if (!window.confirm(`Are you sure you want to ${action} this wallet?`)) return;
 
-        try {
-            if (currentStatus) {
-                await adminService.unblockWallet(walletId);
-            } else {
-                await adminService.blockWallet(walletId);
+        setConfirmModal({
+            isOpen: true,
+            title: currentStatus ? "Unblock Wallet" : "Block Wallet",
+            message: `Are you sure you want to ${action} this wallet?`,
+            type: currentStatus ? 'warning' : 'danger',
+            confirmText: currentStatus ? "Unblock" : "Block Wallet",
+            onConfirm: async () => {
+                try {
+                    if (currentStatus) {
+                        await adminService.unblockWallet(walletId);
+                        toast.success(`Wallet unblocked successfully`);
+                    } else {
+                        await adminService.blockWallet(walletId);
+                        toast.success(`Wallet blocked successfully`);
+                    }
+                    fetchWallets();
+                } catch (error) {
+                    toast.error(`Failed to ${action} wallet.`);
+                }
             }
-            fetchWallets();
-        } catch (error) {
-            toast.error(`Failed to ${action} wallet.`);
-        }
+        });
     };
 
     const handleVerifyBank = async (bankId) => {
-        if (!window.confirm("Verify this bank account?")) return;
-        try {
-            await adminService.verifyWalletBank(bankId);
-            fetchWallets();
-        } catch (error) {
-            toast.error("Failed to verify bank account.");
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Verify Bank Account",
+            message: "Are you sure you want to verify this bank account?",
+            type: 'warning',
+            confirmText: "Verify",
+            onConfirm: async () => {
+                try {
+                    await adminService.verifyWalletBank(bankId);
+                    toast.success("Bank account verified successfully");
+                    fetchWallets();
+                } catch (error) {
+                    toast.error("Failed to verify bank account.");
+                }
+            }
+        });
     };
 
     return (
@@ -212,6 +241,16 @@ const WalletManagement = () => {
                     </div>
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                confirmText={confirmModal.confirmText}
+            />
         </div>
     );
 };

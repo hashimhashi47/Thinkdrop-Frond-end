@@ -4,6 +4,7 @@ import { FileText, CheckCircle, Ban, Edit3, X, RefreshCw, ChevronLeft, ChevronRi
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useSocket } from '../../hooks/useSocket';
+import ConfirmModal from '../components/ConfirmModal';
 
 const AllPosts = () => {
     const [posts, setPosts] = useState([]);
@@ -13,6 +14,16 @@ const AllPosts = () => {
 
     // WebSockets hook
     const { on } = useSocket();
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'danger',
+        confirmText: 'Proceed'
+    });
 
     // Interests logic
     const [interests, setInterests] = useState([]);
@@ -68,31 +79,51 @@ const AllPosts = () => {
     }, [on, page]);
 
     const handleBlockToggle = async (post) => {
-        try {
-            if (post.isblocked) {
-                await adminService.unblockPost(post.id);
-            } else {
-                await adminService.blockPost(post.id);
+        const isBlock = !post.isblocked;
+        setConfirmModal({
+            isOpen: true,
+            title: isBlock ? "Block Post" : "Unblock Post",
+            message: `Are you sure you want to ${isBlock ? 'block' : 'unblock'} this post?`,
+            type: isBlock ? 'danger' : 'warning',
+            confirmText: isBlock ? "Block Content" : "Unblock",
+            onConfirm: async () => {
+                try {
+                    if (post.isblocked) {
+                        await adminService.unblockPost(post.id);
+                        toast.success("Post unblocked successfully");
+                    } else {
+                        await adminService.blockPost(post.id);
+                        toast.success("Post blocked successfully");
+                    }
+                    // Optimistically update
+                    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, isblocked: !p.isblocked } : p));
+                } catch (error) {
+                    console.error("Error toggling block status:", error);
+                    toast.error("Failed to update post status.");
+                }
             }
-            // Optimistically update
-            setPosts(prev => prev.map(p => p.id === post.id ? { ...p, isblocked: !p.isblocked } : p));
-        } catch (error) {
-            console.error("Error toggling block status:", error);
-            toast.error("Failed to update post status.");
-        }
+        });
     };
 
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to permanently delete this post?")) return;
-
-        try {
-            await adminService.deletePost(id);
-            // Optimistically remove from UI
-            setPosts(prev => prev.filter(post => post.id !== id));
-        } catch (error) {
-            console.error("Error deleting post:", error);
-            toast.error("Failed to delete post. Check console for details.");
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete Post",
+            message: "Are you sure you want to permanently delete this post? This action cannot be undone.",
+            type: 'danger',
+            confirmText: "Permanently Delete",
+            onConfirm: async () => {
+                try {
+                    await adminService.deletePost(id);
+                    toast.success("Post deleted successfully");
+                    // Optimistically remove from UI
+                    setPosts(prev => prev.filter(post => post.id !== id));
+                } catch (error) {
+                    console.error("Error deleting post:", error);
+                    toast.error("Failed to delete post. Check console for details.");
+                }
+            }
+        });
     };
 
     const startEditingInterest = (post) => {
@@ -108,6 +139,7 @@ const AllPosts = () => {
 
         try {
             await adminService.updatePostInterest(postId, selectedInterestIds);
+            toast.success("Post interests updated successfully");
 
             // Optimistically update
             const updatedInterests = [];
@@ -317,6 +349,16 @@ const AllPosts = () => {
                     </button>
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                confirmText={confirmModal.confirmText}
+            />
         </div>
     );
 };

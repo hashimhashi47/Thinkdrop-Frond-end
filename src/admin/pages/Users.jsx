@@ -3,6 +3,7 @@ import { adminService } from '../../api/adminService';
 import { useSocket } from '../../hooks/useSocket';
 import toast from 'react-hot-toast';
 import { Search, MoreVertical, Shield, ShieldAlert, Ban, CheckCircle, ChevronLeft, ChevronRight, UserPlus, Edit2, Trash2, X } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 const UserManagement = () => {
     const { on } = useSocket();
@@ -23,6 +24,16 @@ const UserManagement = () => {
         role: 'user', // default
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'danger',
+        confirmText: 'Proceed'
+    });
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -56,33 +67,50 @@ const UserManagement = () => {
     }, [on, page, searchTerm]); // Depend on page/search to refresh current view correctly
 
     const handleBlockToggle = async (userId, action) => {
-        try {
-            if (action === 'block') {
-                if (!window.confirm("Are you sure you want to block this user?")) return;
-                await adminService.blockUser(userId);
-            } else {
-                if (!window.confirm("Are you sure you want to unblock this user?")) return;
-                await adminService.unblockUser(userId);
-            }
+        const isBlock = action === 'block';
 
-            // Refresh the list to reflect changes
-            fetchUsers();
-        } catch (error) {
-            console.error(`Failed to ${action} user`, error);
-            toast.error(`Failed to ${action} user. Please try again.`);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: isBlock ? "Block User" : "Unblock User",
+            message: `Are you sure you want to ${isBlock ? 'block' : 'unblock'} this user?`,
+            type: isBlock ? 'danger' : 'warning',
+            confirmText: isBlock ? "Block User" : "Unblock",
+            onConfirm: async () => {
+                try {
+                    if (isBlock) {
+                        await adminService.blockUser(userId);
+                        toast.success("User blocked successfully");
+                    } else {
+                        await adminService.unblockUser(userId);
+                        toast.success("User unblocked successfully");
+                    }
+                    fetchUsers();
+                } catch (error) {
+                    console.error(`Failed to ${action} user`, error);
+                    toast.error(`Failed to ${action} user. Please try again.`);
+                }
+            }
+        });
     };
 
     const handleDeleteUser = async (userId) => {
-        if (!window.confirm("WARNING: Are you sure you want to permanently delete this user? This action cannot be undone.")) return;
-
-        try {
-            await adminService.deleteUser(userId);
-            fetchUsers();
-        } catch (error) {
-            console.error("Failed to delete user", error);
-            toast.error("Failed to delete user. Please try again.");
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete User",
+            message: "WARNING: Are you sure you want to permanently delete this user? This action cannot be undone.",
+            type: 'danger',
+            confirmText: "Permanently Delete",
+            onConfirm: async () => {
+                try {
+                    await adminService.deleteUser(userId);
+                    toast.success("User deleted successfully");
+                    fetchUsers();
+                } catch (error) {
+                    console.error("Failed to delete user", error);
+                    toast.error("Failed to delete user. Please try again.");
+                }
+            }
+        });
     };
 
     const handleOpenModal = (mode, user = null) => {
@@ -120,12 +148,14 @@ const UserManagement = () => {
             const submitData = { ...formData };
             if (modalMode === 'add') {
                 await adminService.createUser(submitData);
+                toast.success("User created successfully");
             } else {
                 // If editing and password is left blank, omit it
                 if (!submitData.Password) {
                     delete submitData.Password;
                 }
                 await adminService.updateUser(selectedUserId, submitData);
+                toast.success("User updated successfully");
             }
             fetchUsers();
             handleCloseModal();
@@ -385,6 +415,16 @@ const UserManagement = () => {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                confirmText={confirmModal.confirmText}
+            />
         </div>
     );
 };

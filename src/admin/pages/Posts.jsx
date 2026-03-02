@@ -4,12 +4,23 @@ import { AlertTriangle, Trash2, CheckCircle, Eye, RefreshCw, ChevronLeft, Chevro
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useSocket } from '../../hooks/useSocket';
+import ConfirmModal from '../components/ConfirmModal';
 
 const PostModeration = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+
+    // Confirm Modal State
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => { },
+        type: 'danger',
+        confirmText: 'Proceed'
+    });
     const [expandedPostId, setExpandedPostId] = useState(null); // Track open reports section
 
     // Get the 'on' method from your socket hook
@@ -55,19 +66,30 @@ const PostModeration = () => {
     }, [on, page]); // Re-bind if page changes to ensure fetchPosts uses latest state
 
     const handleDelete = async (id) => {
-        try {
-            await adminService.deletePost(id);
-            // Optimistically or reactively remove from UI list after success
-            setPosts(prev => prev.filter(post => post.id !== id));
-        } catch (error) {
-            console.error("Error deleting post:", error);
-            toast.error("Failed to delete post. Check console for details.");
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Purge Post",
+            message: "Are you sure you want to permanently delete this post? This action cannot be undone.",
+            type: 'danger',
+            confirmText: "Purge Content",
+            onConfirm: async () => {
+                try {
+                    await adminService.deletePost(id);
+                    toast.success("Post purged successfully");
+                    // Optimistically or reactively remove from UI list after success
+                    setPosts(prev => prev.filter(post => post.id !== id));
+                } catch (error) {
+                    console.error("Error deleting post:", error);
+                    toast.error("Failed to delete post. Check console for details.");
+                }
+            }
+        });
     };
 
     const handleSafe = async (id) => {
         try {
             await adminService.markPostSafe(id);
+            toast.success("Post marked as safe");
             // Remove from the flagged feed after classifying as safe
             setPosts(prev => prev.filter(post => post.id !== id));
         } catch (error) {
@@ -252,6 +274,16 @@ const PostModeration = () => {
                     </button>
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={confirmModal.isOpen}
+                onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmModal.onConfirm}
+                title={confirmModal.title}
+                message={confirmModal.message}
+                type={confirmModal.type}
+                confirmText={confirmModal.confirmText}
+            />
         </div>
     );
 };

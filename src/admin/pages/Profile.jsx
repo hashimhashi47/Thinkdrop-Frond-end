@@ -71,6 +71,7 @@ const AdminProfile = () => {
 
         try {
             await adminService.updateAdminProfile(payload);
+            toast.success("Profile updated successfully");
             setProfileData(formData);
             setIsEditing(false);
             setShowAvatarSelect(false);
