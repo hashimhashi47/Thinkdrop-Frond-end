@@ -1,7 +1,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const SOCKET_URL = import.meta.env.VITE_WS_URL || 'wss://thinkdrop-back-end.onrender.com/admin/ws';
+const isDevelopment = import.meta.env.MODE === "development" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+const SOCKET_URL = import.meta.env.VITE_WS_URL || (isDevelopment ? 'ws://127.0.0.1:8000/admin/ws' : 'wss://thinkdrop-back-end.onrender.com/admin/ws');
 
 export const useSocket = () => {
     const [isConnected, setIsConnected] = useState(false);
