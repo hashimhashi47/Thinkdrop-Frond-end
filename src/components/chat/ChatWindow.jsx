@@ -103,7 +103,7 @@ export default function ChatWindow({ conversation, messages, onSendMessage, myId
                     </div>
                 ) : (
                     messages.map((msg, index) => {
-                        const isMe = isUserMe(msg.sender_id) || String(msg.sender_id) === "me" || (!myId && String(msg.sender_id) !== String(partnerId));
+                        const isMe = String(msg.sender_id) === String(myId) || String(msg.sender_id) === "me" || (!myId && String(msg.sender_id) !== String(partnerId));
 
                         // Check if msg is just a temporary optimistic update
                         const isOptimistic = msg.id && msg.id.toString().length > 10;
