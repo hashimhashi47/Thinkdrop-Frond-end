@@ -13,8 +13,17 @@ export default function SelectInterests() {
     useEffect(() => {
         const fetchInterests = async () => {
             try {
+                // Fetch all available interests
                 const data = await userService.getAllInterests();
                 setInterests(data);
+
+                // Fetch user's existing interests
+                const userInterests = await userService.getUserInterests();
+                if (Array.isArray(userInterests)) {
+                    // Extract IDs of already selected interests
+                    const existingIds = userInterests.map(i => i.ID);
+                    setSelectedInterests(existingIds);
+                }
             } catch (error) {
                 console.error("Failed to fetch interests", error);
             } finally {
