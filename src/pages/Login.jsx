@@ -27,14 +27,12 @@ export default function Login() {
 
       // Only if there is no Error key, we evaluate role and navigate
       const userData = result.Sucess?.data || {};
-      const role = userData.Role || userData.role || "user"; // Fallback to "user" if undefined but successful
+      const role = (userData.Role || userData.role || "user").toLowerCase();
 
-      localStorage.setItem("userRole", role.toLowerCase());
-
-      if (role.toLowerCase() === "admin") {
-        navigate("/admin");
-      } else {
+      if (role === "user") {
         navigate("/");
+      } else {
+        navigate("/admin");
       }
     } catch (err) {
       console.error("Network or Server Error", err);

@@ -4,14 +4,27 @@ export const authService = {
     login: async (email, password) => {
         const response = await apiClient.post("/auth/login", { email, password });
 
-        // --- TEMPORARY PROCESS ---
-        if (response.data?.Sucess?.data?.AccessToken) {
-            localStorage.setItem("access_token", response.data.Sucess.data.AccessToken);
-        }
-        // Token handling removed for cookie-based auth
-        // console.log(response.data)
-        return response.data;
+        if (response.data?.Sucess?.status && response.data?.Sucess?.data) {
+            const userData = response.data.Sucess.data;
+            if (userData.AccessToken) {
+                localStorage.setItem("access_token", userData.AccessToken);
+            }
+            // Ensure userRole is always set lowercased
+            localStorage.setItem("userRole", (userData.Role || "user").toLowerCase());
 
+            // Handle Permissions: null by clearing user_permissions
+            if (userData.Permissions && Array.isArray(userData.Permissions.Permissions)) {
+                const permissionSlugs = userData.Permissions.Permissions.map(p => p.Slug).filter(slug => slug);
+                localStorage.setItem("user_permissions", JSON.stringify(permissionSlugs));
+            } else {
+                localStorage.setItem("user_permissions", "[]");
+            }
+
+            if (userData.Name) {
+                localStorage.setItem("user_name", userData.Name);
+            }
+        }
+        return response.data;
     },
 
 

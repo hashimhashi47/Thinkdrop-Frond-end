@@ -395,5 +395,67 @@ export const adminService = {
             console.error("Failed to delete sub interest:", error);
             throw error;
         }
+    },
+
+    // --- ROLE MANAGEMENT APIS ---
+
+    getPermissions: async () => {
+        try {
+            const response = await apiClient.get('/admin/get-permission');
+            if (response.data && response.data.Sucess) {
+                return response.data.Sucess.data;
+            }
+            return [];
+        } catch (error) {
+            console.error("Failed to fetch permissions:", error);
+            throw error;
+        }
+    },
+
+    getRoles: async () => {
+        try {
+            const response = await apiClient.get('/admin/get-roles');
+            // Assuming response format: { Sucess: { data: [...] } } or { data: [...] }
+            if (response.data?.Sucess?.data) {
+                return response.data.Sucess.data;
+            }
+            return response.data;
+        } catch (error) {
+            console.error("Failed to fetch roles:", error);
+            throw error;
+        }
+    },
+
+    createRole: async (roleData) => {
+        try {
+            // Ensure payload is specifically { name: "value" }
+            const payload = typeof roleData === 'string' ? { name: roleData } : { name: roleData.name };
+            const response = await apiClient.post('/admin/roles', payload);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to create role:", error);
+            throw error;
+        }
+    },
+
+    updateRole: async (id, roleData) => {
+        console.log(roleData);
+        try {
+            const response = await apiClient.put(`/admin/updateroles/${id}`, roleData);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to update role:", error);
+            throw error;
+        }
+    },
+
+    deleteRole: async (id) => {
+        try {
+            const response = await apiClient.delete(`/admin/roles/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error("Failed to delete role:", error);
+            throw error;
+        }
     }
 };

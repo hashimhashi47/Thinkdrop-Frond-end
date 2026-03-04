@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, AlertTriangle, Settings, LogOut, CreditCard, Wallet, User, MessageSquareWarning } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, AlertTriangle, Settings, LogOut, CreditCard, Wallet, User, MessageSquareWarning, Shield } from 'lucide-react';
 import { authService } from '../../services/authService';
 import { adminService } from '../../api/adminService';
 
 const AdminLayout = () => {
     const navItems = [
-        { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-        { path: '/admin/users', label: 'Users', icon: Users },
-        { path: '/admin/accounts', label: 'Accounts', icon: CreditCard },
-        { path: '/admin/wallet', label: 'Wallet', icon: Wallet },
-        { path: '/admin/interests', label: 'Interests', icon: Settings },
-        { path: '/admin/posts', label: 'Surveillance', icon: AlertTriangle },
-        { path: '/admin/all-posts', label: 'All Posts', icon: FileText },
-        { path: '/admin/reports', label: 'Reports', icon: MessageSquareWarning },
-        { path: '/admin/profile', label: 'Profile', icon: User },
+        { path: '/admin', label: 'Dashboard', slug: 'dashboard', icon: LayoutDashboard, end: true },
+        { path: '/admin/users', label: 'Users', slug: 'users', icon: Users },
+        { path: '/admin/accounts', label: 'Accounts', slug: 'accounts', icon: CreditCard },
+        { path: '/admin/wallet', label: 'Wallet', slug: 'wallet', icon: Wallet },
+        { path: '/admin/interests', label: 'Interests', slug: 'interests', icon: Settings },
+        { path: '/admin/posts', label: 'Surveillance', slug: 'surveillance', icon: AlertTriangle },
+        { path: '/admin/all-posts', label: 'All Posts', slug: 'all_posts', icon: FileText },
+        { path: '/admin/reports', label: 'Reports', slug: 'reports', icon: MessageSquareWarning },
+        { path: '/admin/roles', label: 'Role Config', slug: 'roles_config', icon: Shield, requireSuperAdmin: true },
+        { path: '/admin/profile', label: 'Profile', slug: 'profile', icon: User },
     ];
 
     const [adminData, setAdminData] = useState({
-        fullname: 'Admin Ops',
-        role: 'Level 5 Clearance',
+        fullname: localStorage.getItem('user_name') || 'Admin Ops',
+        roleLabel: localStorage.getItem('userRole') || 'Level 5 Clearance',
         avatarurl: ''
     });
 
@@ -28,7 +29,12 @@ const AdminLayout = () => {
             try {
                 const data = await adminService.getAdminProfile();
                 if (data) {
-                    setAdminData(data);
+                    setAdminData(prev => ({
+                        ...prev,
+                        fullname: data.fullname || data.Name || prev.fullname,
+                        roleLabel: data.role || data.Role || prev.roleLabel,
+                        avatarurl: data.avatarurl || ''
+                    }));
                 }
             } catch (error) {
                 console.error("Failed to load admin profile for layout:", error);
@@ -36,6 +42,39 @@ const AdminLayout = () => {
         };
         fetchAdminData();
     }, []);
+
+    // Get current user details from local storage for filtering
+    const userRole = localStorage.getItem('userRole');
+    const userPermissions = JSON.parse(localStorage.getItem('user_permissions') || '[]');
+
+    // Filter navigation items based on permissions
+    const visibleNavItems = navItems.filter(item => {
+        // Super admins or 'admin' role bypass all checks
+        if (userRole === 'admin') return true;
+
+        // Profile is always visible regardless of permissions
+        if (item.slug === 'profile') return true;
+
+        // Dashboard is usually always visible as entry point
+        if (item.slug === 'dashboard') return true;
+
+        // Check if the item's slug is in the user's permission list
+        return userPermissions.includes(item.slug);
+    });
+
+    // Check if the current route is unauthorized for the user
+    useEffect(() => {
+        const currentPath = window.location.pathname;
+        const currentItem = navItems.find(item => item.path === currentPath);
+
+        // If the path is an admin path and not in permissions (and not admin role)
+        if (currentItem && userRole !== 'admin' && currentItem.slug !== 'profile' && currentItem.slug !== 'dashboard') {
+            if (!userPermissions.includes(currentItem.slug)) {
+                // Redirect to admin dashboard if unauthorized
+                window.location.href = '/admin';
+            }
+        }
+    }, [window.location.pathname, userPermissions, userRole]);
 
     return (
         <div className="flex h-screen bg-neutral-950 text-neutral-200 font-mono">
@@ -47,7 +86,7 @@ const AdminLayout = () => {
                 </div>
 
                 <nav className="flex-1 p-4 space-y-2">
-                    {navItems.map((item) => (
+                    {visibleNavItems.map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}
@@ -86,7 +125,7 @@ const AdminLayout = () => {
                     <div className="flex items-center gap-4">
                         <div className="text-right">
                             <p className="text-sm text-neutral-300 font-bold capitalize">{adminData.fullname || 'Admin Ops'}</p>
-                            <p className="text-xs text-emerald-500 font-mono capitalize">{adminData.role || 'Level 5 Clearance'}</p>
+                            <p className="text-xs text-emerald-500 font-mono capitalize">{adminData.roleLabel || 'Level 5 Clearance'}</p>
                         </div>
                         <div className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 overflow-hidden flex items-center justify-center">
                             {adminData.avatarurl ? (

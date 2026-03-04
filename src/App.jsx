@@ -31,6 +31,7 @@ import WalletManagement from "./admin/pages/Wallet";
 import AdminProfile from "./admin/pages/Profile";
 import Interests from "./admin/pages/Interests";
 import Reports from "./admin/pages/Reports";
+import RoleManagement from "./admin/pages/RoleManagement";
 
 import { Toaster } from 'react-hot-toast';
 
@@ -106,6 +107,7 @@ function App() {
             <Route path="profile" element={<AdminProfile />} />
             <Route path="interests" element={<Interests />} />
             <Route path="reports" element={<Reports />} />
+            <Route path="roles" element={<RoleManagement />} />
           </Route>
         </Route>
       </Routes>

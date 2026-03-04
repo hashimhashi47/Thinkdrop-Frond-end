@@ -24,6 +24,7 @@ const UserManagement = () => {
         role: 'user', // default
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [roles, setRoles] = useState([]);
 
     // Confirm Modal State
     const [confirmModal, setConfirmModal] = useState({
@@ -50,8 +51,20 @@ const UserManagement = () => {
         }
     };
 
+    const fetchRoles = async () => {
+        try {
+            const rolesData = await adminService.getRoles();
+            if (rolesData) {
+                setRoles(rolesData);
+            }
+        } catch (error) {
+            console.error("Failed to fetch roles:", error);
+        }
+    };
+
     useEffect(() => {
         fetchUsers();
+        fetchRoles();
     }, [page, searchTerm]);
 
     // WebSocket Listener
@@ -392,7 +405,13 @@ const UserManagement = () => {
                                     className="w-full bg-neutral-950 border border-neutral-800 rounded p-2 text-neutral-200 focus:outline-none focus:border-emerald-500/50"
                                 >
                                     <option value="user">Standard User</option>
-                                    <option value="admin">Administrator</option>
+                                    {roles.map(role => (
+                                        role.Name ? (
+                                            <option key={role.ID} value={role.Name.toLowerCase()}>
+                                                {role.Name}
+                                            </option>
+                                        ) : null
+                                    ))}
                                 </select>
                             </div>
                             <div className="pt-4 flex justify-end gap-3">
